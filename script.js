@@ -616,6 +616,9 @@ checkoutButton.addEventListener("click", async () => {
     if (!cart?.checkoutUrl) throw new Error("Shopify checkout is unavailable for this cart.");
     const checkoutUrl = new URL(cart.checkoutUrl);
     if (checkoutUrl.protocol !== "https:") throw new Error("Shopify returned an invalid checkout URL.");
+    if (checkoutUrl.hostname === "rovjewelery.com") {
+      checkoutUrl.hostname = "rov-12.myshopify.com";
+    }
     window.location.assign(checkoutUrl.href);
   } catch (error) {
     console.error("Shopify checkout error:", error);
