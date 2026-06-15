@@ -29,9 +29,7 @@ img { max-width: 100%; display: block; }
   height: 86px; padding: 0 4vw; display: flex; align-items: center; justify-content: space-between;
   position: absolute; top: 30px; left: 0; right: 0; z-index: 20; border-bottom: 1px solid rgba(255,255,255,.11);
 }
-.brand { width: 112px; height: 78px; overflow: visible; display: flex; align-items: center; justify-content: center; }
-.brand img { width: 100%; height: 100%; object-fit: contain; filter: brightness(1.12) contrast(1.08) drop-shadow(0 0 8px rgba(212,168,47,.18)); }
-.main-nav { display: flex; align-items: center; gap: 40px; margin-left: 5vw; }
+.main-nav { display: flex; align-items: center; gap: 40px; margin-left: auto; margin-right: auto; }
 .main-nav a { font-size: 12px; text-transform: uppercase; letter-spacing: .16em; position: relative; }
 .main-nav a::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -9px; height: 1px; background: var(--gold); transition: .35s ease; }
 .main-nav a:hover::after, .main-nav a.active::after { right: 0; }
@@ -42,9 +40,10 @@ img { max-width: 100%; display: block; }
 .menu-toggle { display: none; }
 
 .hero { height: 100svh; min-height: 700px; position: relative; overflow: hidden; display: flex; align-items: center; }
-.hero-image { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center; transform: scale(1.015); animation: heroIn 1.5s cubic-bezier(.2,.7,.2,1) both; }
+.hero-image { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: center; }
 .hero-shade { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,.92) 0%, rgba(0,0,0,.72) 31%, rgba(0,0,0,.06) 72%), linear-gradient(0deg, rgba(0,0,0,.65), transparent 45%); }
 .hero-content { position: relative; z-index: 2; width: min(670px, 88vw); margin-left: 8vw; margin-top: 70px; }
+.hero-logo { width: 180px; height: 140px; object-fit: contain; object-position: left center; margin: 0 0 5px; filter: brightness(1.12) contrast(1.08) drop-shadow(0 0 10px rgba(212,168,47,.16)); }
 .eyebrow { margin: 0 0 22px; color: var(--gold-light); text-transform: uppercase; letter-spacing: .26em; font-size: 10px; font-weight: 500; }
 h1, h2 { font-family: var(--serif); font-weight: 400; letter-spacing: -.035em; margin: 0; line-height: .91; }
 h1 { font-size: clamp(76px, 10vw, 148px); }
@@ -82,7 +81,7 @@ h1 em, h2 em, .custom-card em { font-weight: 400; color: var(--gold); }
 .product-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 48px 18px; }
 .product-card { min-width: 0; transition: opacity .25s, transform .25s; cursor: pointer; }
 .product-card.hidden { display: none; }
-.product-image { height: 510px; position: relative; overflow: hidden; background-color: #15130f; background-image: url("./rovjewelery-hero.png"); background-repeat: no-repeat; transition: .6s ease; }
+.product-image { height: 510px; position: relative; overflow: hidden; background-color: #15130f; background-image: url("./rovjewelery-hero-optimized.jpg"); background-repeat: no-repeat; transition: .6s ease; }
 .product-image img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s ease, filter .6s ease; }
 .product-card:hover .product-image img { transform: scale(1.045); filter: brightness(1.08); }
 .product-image.no-image { background: radial-gradient(circle at 50% 45%, #272117 0, #0e0d0a 52%, #070706); }
@@ -242,7 +241,6 @@ footer { background: #030303; border-top: 1px solid var(--line); }
 
 .reveal { opacity: 0; transform: translateY(22px); transition: opacity .8s ease, transform .8s ease; }
 .reveal.visible { opacity: 1; transform: none; }
-@keyframes heroIn { from { opacity: 0; transform: scale(1.08); } to { opacity: 1; transform: scale(1.015); } }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -258,7 +256,6 @@ footer { background: #030303; border-top: 1px solid var(--line); }
 @media (max-width: 760px) {
   .announcement { font-size: 7px; }
   .site-header { height: 72px; top: 30px; padding: 0 20px; }
-  .brand { width: 92px; height: 66px; }
   .menu-toggle { display: flex; flex-direction: column; gap: 6px; order: 3; width: 28px; border: 0; background: none; padding: 5px; }
   .menu-toggle span { height: 1px; background: var(--cream); width: 100%; transition: .3s; }
   .menu-toggle.open span:first-child { transform: translateY(3.5px) rotate(45deg); }
@@ -270,7 +267,8 @@ footer { background: #030303; border-top: 1px solid var(--line); }
   .hero { min-height: 660px; height: 92svh; }
   .hero-image { object-position: 63% center; }
   .hero-shade { background: linear-gradient(90deg, rgba(0,0,0,.9), rgba(0,0,0,.28)), linear-gradient(0deg, rgba(0,0,0,.72), transparent 55%); }
-  .hero-content { margin: 90px 24px 0; width: calc(100% - 48px); }
+  .hero-content { margin: 70px 24px 0; width: calc(100% - 48px); }
+  .hero-logo { width: 150px; height: 110px; margin-bottom: 2px; }
   h1 { font-size: clamp(70px, 24vw, 100px); }
   .hero-actions { flex-direction: column; align-items: stretch; max-width: 280px; }
   .hero-stamp { width: 80px; height: 80px; right: 20px; bottom: 60px; }

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="RovJewelery creates statement gold jewelry and one-of-one custom pieces.">
   <title>RovJewelery | Made to Be Remembered</title>
+  <link rel="preload" as="image" href="./rovjewelery-hero-optimized.jpg" fetchpriority="high">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Italiana&display=swap" rel="stylesheet">
@@ -18,9 +19,6 @@
   </div>
 
   <header class="site-header">
-    <a class="brand" href="#home" aria-label="RovJewelery home">
-      <img src="./rovjewelery-logo.png?v=2" alt="RovJewelery gold logo">
-    </a>
     <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
       <span></span><span></span>
     </button>
@@ -44,10 +42,11 @@
 
   <main>
     <section class="hero" id="home">
-      <img class="hero-image" src="./rovjewelery-hero.png?v=2" alt="Gold diamond Cuban chain displayed on black stone">
+      <img class="hero-image" src="./rovjewelery-hero-optimized.jpg" alt="Gold diamond Cuban chain displayed on black stone" width="1680" height="937" fetchpriority="high">
       <div class="hero-shade"></div>
       <div class="hero-content reveal">
-        <p class="eyebrow">New York · Crafted without compromise</p>
+        <img class="hero-logo" src="./rovjewelery-logo-optimized.png" alt="RovJewelery" width="720" height="720" decoding="async">
+        <p class="eyebrow">Crafted without compromise</p>
         <h1>Make your<br><em>mark.</em></h1>
         <p class="hero-copy">Statement jewelry and one-of-one pieces, designed to outlive the moment.</p>
         <div class="hero-actions">
@@ -193,7 +192,7 @@
   <footer>
     <div class="footer-main">
       <div class="footer-brand">
-        <img src="./rovjewelery-logo.png?v=2" alt="">
+        <img src="./rovjewelery-logo-optimized.png" alt="">
         <p>Fine jewelry with presence.<br>Created for your story.</p>
       </div>
       <div class="footer-column"><h3>Shop</h3><a href="#shop" data-collection-link="all">All</a><a href="#shop" data-collection-link="chains">Chains</a><a href="#shop" data-collection-link="necklaces">Necklaces</a><a href="#shop" data-collection-link="bracelets">Bracelets</a><a href="#shop" data-collection-link="watches">Watches</a><a href="#custom">Custom Order</a></div>
