@@ -19,7 +19,7 @@
 
   <header class="site-header">
     <a class="brand" href="#home" aria-label="RovJewelery home">
-      <img src="assets/rovjewelery-logo.png" alt="RovJewelery gold logo">
+      <img src="./rovjewelery-logo.png" alt="RovJewelery gold logo">
     </a>
     <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
       <span></span><span></span>
@@ -27,6 +27,7 @@
     <nav class="main-nav" aria-label="Main navigation">
       <a class="active" href="#home">Home</a>
       <a href="#shop">Shop</a>
+      <a href="#shop" data-collection-link="watches">Watches</a>
       <a href="#support">Support</a>
       <a href="#custom">Custom</a>
     </nav>
@@ -82,6 +83,7 @@
         <button class="filter" type="button" data-filter="chains">Chains <sup>0</sup></button>
         <button class="filter" type="button" data-filter="necklaces">Necklaces <sup>0</sup></button>
         <button class="filter" type="button" data-filter="bracelets">Bracelets <sup>0</sup></button>
+        <button class="filter" type="button" data-filter="watches">Watches <sup>0</sup></button>
         <button class="filter" type="button" data-filter="custom">Custom Order <sup>01</sup></button>
       </div>
 
@@ -191,10 +193,10 @@
   <footer>
     <div class="footer-main">
       <div class="footer-brand">
-        <img src="assets/rovjewelery-logo.png" alt="">
+        <img src="./rovjewelery-logo.png" alt="">
         <p>Fine jewelry with presence.<br>Created for your story.</p>
       </div>
-      <div class="footer-column"><h3>Shop</h3><a href="#shop">All</a><a href="#shop">Chains</a><a href="#shop">Necklaces</a><a href="#shop">Bracelets</a><a href="#custom">Custom Order</a></div>
+      <div class="footer-column"><h3>Shop</h3><a href="#shop" data-collection-link="all">All</a><a href="#shop" data-collection-link="chains">Chains</a><a href="#shop" data-collection-link="necklaces">Necklaces</a><a href="#shop" data-collection-link="bracelets">Bracelets</a><a href="#shop" data-collection-link="watches">Watches</a><a href="#custom">Custom Order</a></div>
       <div class="footer-column"><h3>Support</h3><a href="#support">Contact</a><a href="#support">FAQ</a><a href="#">Shipping & returns</a><a href="#">Jewelry care</a></div>
       <div class="footer-column"><h3>Follow</h3><a href="#">Instagram ↗</a><a href="#">TikTok ↗</a><a href="#">Pinterest ↗</a></div>
       <div class="newsletter">
@@ -210,6 +212,29 @@
       <span>Designed to endure.</span>
     </div>
   </footer>
+
+  <div class="product-modal-overlay" data-product-close></div>
+  <section class="product-modal" aria-labelledby="product-modal-title" aria-hidden="true" role="dialog" aria-modal="true">
+    <button class="product-modal-close" type="button" aria-label="Close product details" data-product-close>×</button>
+    <div class="product-modal-image" id="product-modal-image"></div>
+    <div class="product-modal-content">
+      <p class="eyebrow" id="product-modal-category">The collection</p>
+      <h2 id="product-modal-title">Product</h2>
+      <p class="product-modal-price" id="product-modal-price"></p>
+      <div class="product-modal-description" id="product-modal-description"></div>
+      <label>Variant
+        <select id="product-modal-variant"></select>
+      </label>
+      <label>Quantity
+        <div class="modal-quantity">
+          <button type="button" data-modal-quantity="-1" aria-label="Decrease quantity">−</button>
+          <input id="product-modal-quantity" type="number" min="1" value="1" aria-label="Product quantity">
+          <button type="button" data-modal-quantity="1" aria-label="Increase quantity">+</button>
+        </div>
+      </label>
+      <button class="button button-gold" id="product-modal-add" type="button">Add to cart <span>↗</span></button>
+    </div>
+  </section>
 
   <div class="cart-overlay" data-cart-close></div>
   <aside class="cart-drawer" aria-labelledby="cart-title" aria-hidden="true">

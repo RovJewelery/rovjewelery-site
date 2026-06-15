@@ -1,6 +1,6 @@
 const API_VERSION = "2026-04";
 const CART_STORAGE_KEY = "rovjewelery-shopify-cart-id";
-const COLLECTIONS = ["chains", "necklaces", "bracelets"];
+const COLLECTIONS = ["chains", "necklaces", "bracelets", "watches"];
 const config = window.SHOPIFY_CONFIG || {};
 const storeDomain = normalizeStoreDomain(config.SHOPIFY_STORE_URL);
 const storefrontToken = String(config.SHOPIFY_STOREFRONT_ACCESS_TOKEN || "").trim();
@@ -13,8 +13,9 @@ const isConfigured = Boolean(
 
 const state = {
   activeCategory: "all",
-  products: { all: [], chains: [], necklaces: [], bracelets: [] },
-  cart: null
+  products: { all: [], chains: [], necklaces: [], bracelets: [], watches: [] },
+  cart: null,
+  selectedProduct: null
 };
 
 const productGrid = document.querySelector("#product-grid");
@@ -24,6 +25,10 @@ const cartDrawer = document.querySelector(".cart-drawer");
 const cartLines = document.querySelector("#cart-lines");
 const cartFooter = document.querySelector("#cart-footer");
 const checkoutButton = document.querySelector("#checkout-button");
+const productModal = document.querySelector(".product-modal");
+const modalVariant = document.querySelector("#product-modal-variant");
+const modalQuantity = document.querySelector("#product-modal-quantity");
+const modalAddButton = document.querySelector("#product-modal-add");
 const toast = document.querySelector(".toast");
 let toastTimer;
 
@@ -58,8 +63,13 @@ const PRODUCT_FIELDS = `
   id
   handle
   title
+  productType
+  tags
+  description
+  descriptionHtml
   availableForSale
   featuredImage { url altText width height }
+  images(first: 10) { nodes { url altText width height } }
   priceRange { minVariantPrice { amount currencyCode } }
   variants(first: 100) {
     nodes {
@@ -152,7 +162,7 @@ function renderProductCard(product) {
   `).join("");
 
   return `
-    <article class="product-card reveal visible" data-product-id="${escapeHtml(product.id)}">
+    <article class="product-card reveal visible" data-product-id="${escapeHtml(product.id)}" tabindex="0" role="button" aria-label="View ${escapeHtml(product.title)}">
       <div class="product-image ${image ? "" : "no-image"}">
         ${image ? `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.altText || product.title)}" loading="lazy">` : ""}
         ${product.availableForSale ? "" : '<span class="product-tag">Sold out</span>'}
@@ -194,6 +204,15 @@ function renderProducts() {
 
   const products = state.products[state.activeCategory] || [];
   if (!products.length) {
+    if (state.activeCategory === "watches") {
+      productGrid.innerHTML = `
+        <div class="catalog-message">
+          <h3>Coming Soon</h3>
+          <p>Luxury watches arriving soon.</p>
+        </div>
+      `;
+      return;
+    }
     productGrid.innerHTML = `
       <div class="catalog-message">
         <h3>No pieces found</h3>
@@ -241,6 +260,17 @@ async function loadCatalog() {
       const shopifyCollection = findCollection(data.collections.nodes, collection);
       state.products[collection] = shopifyCollection?.products.nodes || [];
     });
+    if (!findCollection(data.collections.nodes, "watches")) {
+      state.products.watches = state.products.all.filter((product) => {
+        const searchable = [
+          product.title,
+          product.productType,
+          ...(product.tags || []),
+          product.description
+        ].join(" ").toLowerCase();
+        return /\b(watch|watches|g-shock|citizen|eco-drive|timepiece)\b/.test(searchable);
+      });
+    }
     updateFilterCounts();
     renderProducts();
   } catch (error) {
@@ -263,6 +293,14 @@ filters.forEach((filter) => {
   });
 });
 
+document.querySelectorAll("[data-collection-link]").forEach((link) => {
+  link.addEventListener("click", () => {
+    const category = link.dataset.collectionLink;
+    const matchingFilter = [...filters].find((filter) => filter.dataset.filter === category);
+    if (matchingFilter) matchingFilter.click();
+  });
+});
+
 productGrid.addEventListener("change", (event) => {
   if (!event.target.matches(".variant-select")) return;
   const card = event.target.closest(".product-card");
@@ -275,7 +313,12 @@ productGrid.addEventListener("change", (event) => {
 
 productGrid.addEventListener("click", async (event) => {
   const button = event.target.closest(".add-to-cart");
-  if (!button) return;
+  if (!button) {
+    if (event.target.closest("select, a")) return;
+    const card = event.target.closest(".product-card[data-product-id]");
+    if (card) openProductModal(card.dataset.productId);
+    return;
+  }
   const card = button.closest(".product-card");
   const variantId = card.querySelector(".variant-select").value;
   const product = state.products.all.find((item) => item.id === card.dataset.productId);
@@ -296,7 +339,89 @@ productGrid.addEventListener("click", async (event) => {
   }
 });
 
-async function createCart(variantId) {
+productGrid.addEventListener("keydown", (event) => {
+  if (!["Enter", " "].includes(event.key) || event.target.closest("select, button, a")) return;
+  const card = event.target.closest(".product-card[data-product-id]");
+  if (!card) return;
+  event.preventDefault();
+  openProductModal(card.dataset.productId);
+});
+
+function openProductModal(productId) {
+  const product = state.products.all.find((item) => item.id === productId);
+  if (!product) return;
+  state.selectedProduct = product;
+  document.querySelector("#product-modal-category").textContent = productCategoryLabel(product);
+  document.querySelector("#product-modal-title").textContent = product.title;
+  document.querySelector("#product-modal-description").innerHTML =
+    product.descriptionHtml || `<p>${escapeHtml(product.description || "Details coming soon.")}</p>`;
+  const image = product.featuredImage || product.images.nodes[0];
+  document.querySelector("#product-modal-image").innerHTML = image
+    ? `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.altText || product.title)}">`
+    : "";
+  modalVariant.innerHTML = product.variants.nodes.map((variant) => `
+    <option value="${escapeHtml(variant.id)}" ${variant.availableForSale ? "" : "disabled"}>
+      ${escapeHtml(variantLabel(variant))}${variant.availableForSale ? ` — ${formatMoney(variant.price)}` : " — Sold out"}
+    </option>
+  `).join("");
+  const availableVariant = product.variants.nodes.find((variant) => variant.availableForSale);
+  if (availableVariant) modalVariant.value = availableVariant.id;
+  modalQuantity.value = "1";
+  updateProductModalVariant();
+  document.body.classList.add("product-open");
+  productModal.setAttribute("aria-hidden", "false");
+  document.querySelector(".product-modal-close").focus();
+}
+
+function closeProductModal() {
+  document.body.classList.remove("product-open");
+  productModal.setAttribute("aria-hidden", "true");
+}
+
+function updateProductModalVariant() {
+  const variant = state.selectedProduct?.variants.nodes.find((item) => item.id === modalVariant.value);
+  document.querySelector("#product-modal-price").textContent = formatMoney(variant?.price);
+  modalAddButton.disabled = !variant?.availableForSale;
+  modalAddButton.firstChild.textContent = variant?.availableForSale ? "Add to cart " : "Sold out ";
+  if (variant?.image) {
+    document.querySelector("#product-modal-image").innerHTML =
+      `<img src="${escapeHtml(variant.image.url)}" alt="${escapeHtml(variant.image.altText || state.selectedProduct.title)}">`;
+  }
+}
+
+modalVariant.addEventListener("change", updateProductModalVariant);
+document.querySelectorAll("[data-modal-quantity]").forEach((button) => {
+  button.addEventListener("click", () => {
+    const next = Math.max(1, Number(modalQuantity.value || 1) + Number(button.dataset.modalQuantity));
+    modalQuantity.value = String(next);
+  });
+});
+modalQuantity.addEventListener("change", () => {
+  modalQuantity.value = String(Math.max(1, Math.floor(Number(modalQuantity.value) || 1)));
+});
+modalAddButton.addEventListener("click", async () => {
+  const variant = state.selectedProduct?.variants.nodes.find((item) => item.id === modalVariant.value);
+  if (!variant?.availableForSale) return;
+  const quantity = Math.max(1, Math.floor(Number(modalQuantity.value) || 1));
+  modalAddButton.disabled = true;
+  modalAddButton.firstChild.textContent = "Adding... ";
+  try {
+    await addToCart(variant.id, quantity);
+    closeProductModal();
+    showToast(`${state.selectedProduct.title} added`);
+    openCart();
+  } catch (error) {
+    console.error("Shopify product cart error:", error);
+    showToast(error.message);
+  } finally {
+    updateProductModalVariant();
+  }
+});
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-product-close]")) closeProductModal();
+});
+
+async function createCart(variantId, quantity = 1) {
   const data = await shopifyFetch(`
     mutation CreateCart($input: CartInput!) {
       cartCreate(input: $input) {
@@ -304,14 +429,14 @@ async function createCart(variantId) {
         userErrors { field message }
       }
     }
-  `, { input: { lines: [{ merchandiseId: variantId, quantity: 1 }] } });
+  `, { input: { lines: [{ merchandiseId: variantId, quantity }] } });
   assertNoCartErrors(data.cartCreate.userErrors);
   return data.cartCreate.cart;
 }
 
-async function addToCart(variantId) {
+async function addToCart(variantId, quantity = 1) {
   if (!state.cart?.id) {
-    state.cart = await createCart(variantId);
+    state.cart = await createCart(variantId, quantity);
   } else {
     const data = await shopifyFetch(`
       mutation AddCartLines($cartId: ID!, $lines: [CartLineInput!]!) {
@@ -320,7 +445,7 @@ async function addToCart(variantId) {
           userErrors { field message }
         }
       }
-    `, { cartId: state.cart.id, lines: [{ merchandiseId: variantId, quantity: 1 }] });
+    `, { cartId: state.cart.id, lines: [{ merchandiseId: variantId, quantity }] });
     assertNoCartErrors(data.cartLinesAdd.userErrors);
     state.cart = data.cartLinesAdd.cart;
   }
@@ -380,6 +505,18 @@ async function restoreCart() {
     console.warn("Stored Shopify cart could not be restored:", error);
     localStorage.removeItem(CART_STORAGE_KEY);
   }
+}
+
+async function refreshCart() {
+  if (!state.cart?.id) return null;
+  const data = await shopifyFetch(`
+    query RefreshCart($cartId: ID!) {
+      cart(id: $cartId) { ${CART_FIELDS} }
+    }
+  `, { cartId: state.cart.id });
+  state.cart = data.cart;
+  if (state.cart) saveAndRenderCart();
+  return state.cart;
 }
 
 function saveAndRenderCart() {
@@ -465,10 +602,27 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("[data-cart-close]")) closeCart();
 });
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") closeCart();
+  if (event.key === "Escape") {
+    closeCart();
+    closeProductModal();
+  }
 });
-checkoutButton.addEventListener("click", () => {
-  if (state.cart?.checkoutUrl) window.location.assign(state.cart.checkoutUrl);
+checkoutButton.addEventListener("click", async () => {
+  checkoutButton.disabled = true;
+  const originalText = checkoutButton.innerHTML;
+  checkoutButton.textContent = "Preparing checkout...";
+  try {
+    const cart = await refreshCart();
+    if (!cart?.checkoutUrl) throw new Error("Shopify checkout is unavailable for this cart.");
+    const checkoutUrl = new URL(cart.checkoutUrl);
+    if (checkoutUrl.protocol !== "https:") throw new Error("Shopify returned an invalid checkout URL.");
+    window.location.assign(checkoutUrl.href);
+  } catch (error) {
+    console.error("Shopify checkout error:", error);
+    showToast(error.message);
+    checkoutButton.disabled = false;
+    checkoutButton.innerHTML = originalText;
+  }
 });
 
 function showToast(message) {
