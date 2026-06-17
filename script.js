@@ -93,7 +93,7 @@ const CATALOG_QUERY = `
     products(first: 100, after: $after, sortKey: CREATED_AT, reverse: true) {
       nodes { ${PRODUCT_FIELDS} }
       pageInfo { hasNextPage endCursor }
-    });
+    }
     collections(first: 100) {
       nodes {
         title
