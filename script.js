@@ -88,12 +88,17 @@ const PRODUCT_FIELDS = `
   }
 `;
 
-const CATALOG_QUERY = `
-  query RovCatalog($after: String) {
+const PRODUCTS_QUERY = `
+  query RovProducts($after: String) {
     products(first: 100, after: $after, sortKey: CREATED_AT, reverse: true) {
       nodes { ${PRODUCT_FIELDS} }
       pageInfo { hasNextPage endCursor }
     }
+  }
+`;
+
+const COLLECTIONS_QUERY = `
+  query RovCollections {
     collections(first: 100) {
       nodes {
         title
@@ -157,11 +162,12 @@ function variantLabel(variant) {
 }
 
 function renderProductCard(product) {
-  const availableVariants = product.variants.nodes.filter((variant) => variant.availableForSale);
-  const selectedVariant = availableVariants[0] || product.variants.nodes[0];
+  const variants = product.variants?.nodes || [];
+  const availableVariants = variants.filter((variant) => variant.availableForSale);
+  const selectedVariant = availableVariants[0] || variants[0];
   const image = product.featuredImage;
-  const hasMultipleVariants = product.variants.nodes.length > 1 || product.variants.nodes[0]?.title !== "Default Title";
-  const variantOptions = product.variants.nodes.map((variant) => `
+  const hasMultipleVariants = variants.length > 1 || variants[0]?.title !== "Default Title";
+  const variantOptions = variants.map((variant) => `
     <option value="${escapeHtml(variant.id)}" ${variant.id === selectedVariant?.id ? "selected" : ""} ${variant.availableForSale ? "" : "disabled"}>
       ${escapeHtml(variantLabel(variant))}${variant.availableForSale ? ` — ${formatMoney(variant.price)}` : " — Sold out"}
     </option>
@@ -175,7 +181,7 @@ function renderProductCard(product) {
       </div>
       <div class="product-info">
         <div><p>${escapeHtml(productCategoryLabel(product))}</p><h3>${escapeHtml(product.title)}</h3></div>
-        <span>From ${formatMoney(product.priceRange.minVariantPrice)}</span>
+        <span>From ${formatMoney(product.priceRange?.minVariantPrice)}</span>
       </div>
       <div class="product-actions">
         <select class="variant-select" aria-label="Choose a variant for ${escapeHtml(product.title)}" ${hasMultipleVariants ? "" : 'aria-hidden="true"'}>
@@ -293,6 +299,40 @@ function productMatchesCategory(product, category) {
   return (aliases[category] || [category]).some((alias) => searchable.includes(alias));
 }
 
+async function loadAllProducts() {
+  let after = null;
+  const allProducts = [];
+
+  do {
+    const data = await shopifyFetch(PRODUCTS_QUERY, { after });
+    const products = data.products?.nodes || [];
+    allProducts.push(...products);
+    after = data.products?.pageInfo?.hasNextPage ? data.products.pageInfo.endCursor : null;
+  } while (after);
+
+  return allProducts;
+}
+
+async function loadCollections() {
+  const data = await shopifyFetch(COLLECTIONS_QUERY);
+  return data.collections?.nodes || [];
+}
+
+function buildCategoryProducts(collections = []) {
+  COLLECTIONS.forEach((collection) => {
+    const shopifyCollection = findCollection(collections, collection);
+    const collectionProducts = shopifyCollection?.products?.nodes || [];
+    const taggedProducts = state.products.all.filter((product) => productMatchesCategory(product, collection));
+    const mergedProducts = new Map();
+
+    [...collectionProducts, ...taggedProducts].forEach((product) => {
+      if (product?.id) mergedProducts.set(product.id, product);
+    });
+
+    state.products[collection] = [...mergedProducts.values()];
+  });
+}
+
 async function loadCatalog() {
   if (!isConfigured) {
     productGrid.innerHTML = `
@@ -305,28 +345,16 @@ async function loadCatalog() {
   }
 
   try {
-    let after = null;
-    let collections = [];
-    const allProducts = [];
+    state.products.all = await loadAllProducts();
+    state.currentPage = 1;
 
-    do {
-      const data = await shopifyFetch(CATALOG_QUERY, { after });
-      allProducts.push(...data.products.nodes);
-      collections = data.collections.nodes;
-      after = data.products.pageInfo.hasNextPage ? data.products.pageInfo.endCursor : null;
-    } while (after);
+    try {
+      buildCategoryProducts(await loadCollections());
+    } catch (collectionError) {
+      console.warn("Shopify collection filters unavailable; falling back to product tags.", collectionError);
+      buildCategoryProducts([]);
+    }
 
-    state.products.all = allProducts;
-    COLLECTIONS.forEach((collection) => {
-      const shopifyCollection = findCollection(collections, collection);
-      const collectionProducts = shopifyCollection?.products.nodes || [];
-      const taggedProducts = state.products.all.filter((product) => productMatchesCategory(product, collection));
-      const mergedProducts = new Map();
-      [...collectionProducts, ...taggedProducts].forEach((product) => {
-        mergedProducts.set(product.id, product);
-      });
-      state.products[collection] = [...mergedProducts.values()];
-    });
     updateFilterCounts();
     renderProducts();
   } catch (error) {
