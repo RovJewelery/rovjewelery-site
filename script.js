@@ -15,9 +15,7 @@ const state = {
   activeCategory: "all",
   products: { all: [], chains: [], necklaces: [], bracelets: [], watches: [] },
   cart: null,
-  selectedProduct: null,
-  productDetails: new Map(),
-  productMedia: []
+  selectedProduct: null
 };
 
 const productGrid = document.querySelector("#product-grid");
@@ -95,36 +93,6 @@ const CATALOG_QUERY = `
         title
         handle
         products(first: 100) { nodes { ${PRODUCT_FIELDS} } }
-      }
-    }
-  }
-`;
-
-const PRODUCT_DETAIL_QUERY = `
-  query ProductDetails($id: ID!) {
-    node(id: $id) {
-      ... on Product {
-        ${PRODUCT_FIELDS}
-        media(first: 20) {
-          nodes {
-            __typename
-            mediaContentType
-            alt
-            previewImage { url altText }
-            ... on MediaImage {
-              image { url altText width height }
-            }
-            ... on Video {
-              sources {
-                url
-                mimeType
-                format
-                width
-                height
-              }
-            }
-          }
-        }
       }
     }
   }
@@ -379,82 +347,18 @@ productGrid.addEventListener("keydown", (event) => {
   openProductModal(card.dataset.productId);
 });
 
-async function fetchProductDetails(productId) {
-  if (state.productDetails.has(productId)) return state.productDetails.get(productId);
-  const data = await shopifyFetch(PRODUCT_DETAIL_QUERY, { id: productId });
-  if (!data.node) throw new Error("Product details are unavailable.");
-  state.productDetails.set(productId, data.node);
-  return data.node;
-}
-
-function chooseVideoSource(sources = []) {
-  return sources.find((source) => source.mimeType === "video/mp4") || sources.find((source) => source.url) || null;
-}
-
-function normalizeProductMedia(product) {
-  const mediaNodes = product.media?.nodes || [];
-  const normalized = mediaNodes.map((media) => {
-    if (media.__typename === "MediaImage" && media.image?.url) {
-      return {
-        type: "image",
-        url: media.image.url,
-        alt: media.image.altText || media.alt || product.title
-      };
-    }
-
-    if (media.__typename === "Video") {
-      const source = chooseVideoSource(media.sources);
-      if (!source?.url) return null;
-      return {
-        type: "video",
-        url: source.url,
-        mimeType: source.mimeType,
-        poster: media.previewImage?.url,
-        alt: media.alt || media.previewImage?.altText || `${product.title} video`
-      };
-    }
-
-    return null;
-  }).filter(Boolean);
-
-  if (normalized.length) return normalized;
-
-  return (product.images?.nodes || []).map((image) => ({
-    type: "image",
-    url: image.url,
-    alt: image.altText || product.title
-  }));
-}
-
-function renderProductMediaGallery(mediaItems, productTitle) {
-  const mediaContainer = document.querySelector("#product-modal-image");
-  if (!mediaItems.length) {
-    mediaContainer.innerHTML = '<div class="product-media-status">Media coming soon.</div>';
-    return;
-  }
-
-  mediaContainer.innerHTML = `
-    <div class="product-media-gallery" aria-label="${escapeHtml(productTitle)} media gallery">
-      ${mediaItems.map((item) => `
-        <figure class="product-media-item product-media-${item.type}">
-          ${item.type === "video"
-            ? `<video controls preload="metadata" ${item.poster ? `poster="${escapeHtml(item.poster)}"` : ""}>
-                <source src="${escapeHtml(item.url)}" ${item.mimeType ? `type="${escapeHtml(item.mimeType)}"` : ""}>
-              </video>`
-            : `<img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt)}" loading="lazy">`
-          }
-        </figure>
-      `).join("")}
-    </div>
-  `;
-}
-
-function renderProductModalDetails(product) {
+function openProductModal(productId) {
+  const product = state.products.all.find((item) => item.id === productId);
+  if (!product) return;
   state.selectedProduct = product;
   document.querySelector("#product-modal-category").textContent = productCategoryLabel(product);
   document.querySelector("#product-modal-title").textContent = product.title;
   document.querySelector("#product-modal-description").innerHTML =
     product.descriptionHtml || `<p>${escapeHtml(product.description || "Details coming soon.")}</p>`;
+  const image = product.featuredImage || product.images.nodes[0];
+  document.querySelector("#product-modal-image").innerHTML = image
+    ? `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.altText || product.title)}">`
+    : "";
   modalVariant.innerHTML = product.variants.nodes.map((variant) => `
     <option value="${escapeHtml(variant.id)}" ${variant.availableForSale ? "" : "disabled"}>
       ${escapeHtml(variantLabel(variant))}${variant.availableForSale ? ` — ${formatMoney(variant.price)}` : " — Sold out"}
@@ -464,40 +368,9 @@ function renderProductModalDetails(product) {
   if (availableVariant) modalVariant.value = availableVariant.id;
   modalQuantity.value = "1";
   updateProductModalVariant();
-}
-
-async function openProductModal(productId) {
-  const product = state.products.all.find((item) => item.id === productId);
-  if (!product) return;
-  const requestId = productId;
-
-  state.productMedia = [];
-  renderProductModalDetails(product);
-  document.querySelector("#product-modal-image").innerHTML = `
-    <div class="product-media-status">
-      <span></span>
-      <p>Loading product media</p>
-    </div>
-  `;
   document.body.classList.add("product-open");
   productModal.setAttribute("aria-hidden", "false");
   document.querySelector(".product-modal-close").focus();
-
-  try {
-    const detailedProduct = await fetchProductDetails(productId);
-    if (requestId !== state.selectedProduct?.id) return;
-    renderProductModalDetails(detailedProduct);
-    state.productMedia = normalizeProductMedia(detailedProduct);
-    renderProductMediaGallery(state.productMedia, detailedProduct.title);
-  } catch (error) {
-    console.error("Shopify product media error:", error);
-    if (requestId !== state.selectedProduct?.id) return;
-    document.querySelector("#product-modal-image").innerHTML = `
-      <div class="product-media-status product-media-error">
-        <p>${escapeHtml(error.message || "We couldn't load this product's media.")}</p>
-      </div>
-    `;
-  }
 }
 
 function closeProductModal() {
@@ -510,6 +383,10 @@ function updateProductModalVariant() {
   document.querySelector("#product-modal-price").textContent = formatMoney(variant?.price);
   modalAddButton.disabled = !variant?.availableForSale;
   modalAddButton.firstChild.textContent = variant?.availableForSale ? "Add to cart " : "Sold out ";
+  if (variant?.image) {
+    document.querySelector("#product-modal-image").innerHTML =
+      `<img src="${escapeHtml(variant.image.url)}" alt="${escapeHtml(variant.image.altText || state.selectedProduct.title)}">`;
+  }
 }
 
 modalVariant.addEventListener("change", updateProductModalVariant);
@@ -819,5 +696,26 @@ const sectionObserver = new IntersectionObserver((entries) => {
 }, { rootMargin: "-35% 0px -60% 0px" });
 sections.forEach((section) => sectionObserver.observe(section));
 
+function setupHeroVideo() {
+  const video = document.querySelector(".hero-video");
+  if (!video) return;
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const savesData = navigator.connection?.saveData;
+  if (prefersReducedMotion || savesData) {
+    video.removeAttribute("autoplay");
+    video.preload = "none";
+    video.pause();
+    return;
+  }
+
+  video.addEventListener("error", () => video.classList.add("video-unavailable"), { once: true });
+  video.load();
+  video.play().catch(() => {
+    video.classList.add("video-unavailable");
+  });
+}
+
+setupHeroVideo();
 loadCatalog();
 restoreCart();
