@@ -1,6 +1,7 @@
 const API_VERSION = "2026-04";
 const CART_STORAGE_KEY = "rovjewelery-shopify-cart-id";
 const COLLECTIONS = ["chains", "necklaces", "bracelets", "watches"];
+const PRODUCTS_PER_PAGE = 6;
 const config = window.SHOPIFY_CONFIG || {};
 const storeDomain = normalizeStoreDomain(config.SHOPIFY_STORE_URL);
 const storefrontToken = String(config.SHOPIFY_STOREFRONT_ACCESS_TOKEN || "").trim();
@@ -14,14 +15,16 @@ const isConfigured = Boolean(
 const state = {
   activeCategory: "all",
   products: { all: [], chains: [], necklaces: [], bracelets: [], watches: [] },
+  currentPage: 1,
   cart: null,
-  selectedProduct: null,
-  productDetails: new Map(),
-  productMedia: []
+  selectedProduct: null
 };
 
 const productGrid = document.querySelector("#product-grid");
 const filters = document.querySelectorAll(".filter");
+const filterRow = document.querySelector(".filter-row");
+const filterScroll = document.querySelector(".filter-scroll");
+const pagination = document.querySelector("#pagination");
 const bagCount = document.querySelector(".bag-count");
 const cartDrawer = document.querySelector(".cart-drawer");
 const cartLines = document.querySelector("#cart-lines");
@@ -86,45 +89,16 @@ const PRODUCT_FIELDS = `
 `;
 
 const CATALOG_QUERY = `
-  query RovCatalog {
-    products(first: 100, sortKey: CREATED_AT, reverse: true) {
+  query RovCatalog($after: String) {
+    products(first: 100, after: $after, sortKey: CREATED_AT, reverse: true) {
       nodes { ${PRODUCT_FIELDS} }
-    }
+      pageInfo { hasNextPage endCursor }
+    });
     collections(first: 100) {
       nodes {
         title
         handle
         products(first: 100) { nodes { ${PRODUCT_FIELDS} } }
-      }
-    }
-  }
-`;
-
-const PRODUCT_DETAIL_QUERY = `
-  query ProductDetails($id: ID!) {
-    node(id: $id) {
-      ... on Product {
-        ${PRODUCT_FIELDS}
-        media(first: 20) {
-          nodes {
-            __typename
-            mediaContentType
-            alt
-            previewImage { url altText }
-            ... on MediaImage {
-              image { url altText width height }
-            }
-            ... on Video {
-              sources {
-                url
-                mimeType
-                format
-                width
-                height
-              }
-            }
-          }
-        }
       }
     }
   }
@@ -229,6 +203,8 @@ function customCard() {
 }
 
 function renderProducts() {
+  if (pagination) pagination.innerHTML = "";
+
   if (state.activeCategory === "custom") {
     productGrid.innerHTML = customCard();
     return;
@@ -254,7 +230,33 @@ function renderProducts() {
     return;
   }
 
-  productGrid.innerHTML = products.map(renderProductCard).join("") + (state.activeCategory === "all" ? customCard() : "");
+  const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
+  state.currentPage = Math.min(Math.max(state.currentPage, 1), totalPages);
+  const start = (state.currentPage - 1) * PRODUCTS_PER_PAGE;
+  const visibleProducts = products.slice(start, start + PRODUCTS_PER_PAGE);
+
+  productGrid.innerHTML = visibleProducts.map(renderProductCard).join("") + (state.activeCategory === "all" && state.currentPage === totalPages ? customCard() : "");
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  if (!pagination || totalPages <= 1) {
+    if (pagination) pagination.innerHTML = "";
+    return;
+  }
+
+  const pageButtons = Array.from({ length: totalPages }, (_, index) => {
+    const page = index + 1;
+    return `
+      <button class="page-number ${page === state.currentPage ? "active" : ""}" type="button" data-page="${page}" aria-label="Go to page ${page}" ${page === state.currentPage ? 'aria-current="page"' : ""}>${page}</button>
+    `;
+  }).join("");
+
+  pagination.innerHTML = `
+    <button class="page-step" type="button" data-page="${state.currentPage - 1}" ${state.currentPage === 1 ? "disabled" : ""}>Previous</button>
+    <div class="page-numbers">${pageButtons}</div>
+    <button class="page-step" type="button" data-page="${state.currentPage + 1}" ${state.currentPage === totalPages ? "disabled" : ""}>Next</button>
+  `;
 }
 
 function updateFilterCounts() {
@@ -274,6 +276,23 @@ function findCollection(collections, expectedName) {
   });
 }
 
+function productMatchesCategory(product, category) {
+  const aliases = {
+    chains: ["chain", "chains"],
+    necklaces: ["necklace", "necklaces", "pendant", "pendants"],
+    bracelets: ["bracelet", "bracelets", "bangle", "bangles"],
+    watches: ["watch", "watches", "g-shock", "citizen", "eco-drive", "timepiece"]
+  };
+  const searchable = [
+    product.title,
+    product.productType,
+    ...(product.tags || []),
+    product.description
+  ].join(" ").toLowerCase();
+
+  return (aliases[category] || [category]).some((alias) => searchable.includes(alias));
+}
+
 async function loadCatalog() {
   if (!isConfigured) {
     productGrid.innerHTML = `
@@ -286,23 +305,28 @@ async function loadCatalog() {
   }
 
   try {
-    const data = await shopifyFetch(CATALOG_QUERY);
-    state.products.all = data.products.nodes;
+    let after = null;
+    let collections = [];
+    const allProducts = [];
+
+    do {
+      const data = await shopifyFetch(CATALOG_QUERY, { after });
+      allProducts.push(...data.products.nodes);
+      collections = data.collections.nodes;
+      after = data.products.pageInfo.hasNextPage ? data.products.pageInfo.endCursor : null;
+    } while (after);
+
+    state.products.all = allProducts;
     COLLECTIONS.forEach((collection) => {
-      const shopifyCollection = findCollection(data.collections.nodes, collection);
-      state.products[collection] = shopifyCollection?.products.nodes || [];
-    });
-    if (!findCollection(data.collections.nodes, "watches")) {
-      state.products.watches = state.products.all.filter((product) => {
-        const searchable = [
-          product.title,
-          product.productType,
-          ...(product.tags || []),
-          product.description
-        ].join(" ").toLowerCase();
-        return /\b(watch|watches|g-shock|citizen|eco-drive|timepiece)\b/.test(searchable);
+      const shopifyCollection = findCollection(collections, collection);
+      const collectionProducts = shopifyCollection?.products.nodes || [];
+      const taggedProducts = state.products.all.filter((product) => productMatchesCategory(product, collection));
+      const mergedProducts = new Map();
+      [...collectionProducts, ...taggedProducts].forEach((product) => {
+        mergedProducts.set(product.id, product);
       });
-    }
+      state.products[collection] = [...mergedProducts.values()];
+    });
     updateFilterCounts();
     renderProducts();
   } catch (error) {
@@ -321,8 +345,21 @@ filters.forEach((filter) => {
     filters.forEach((item) => item.classList.remove("active"));
     filter.classList.add("active");
     state.activeCategory = filter.dataset.filter;
+    state.currentPage = 1;
     renderProducts();
   });
+});
+
+pagination?.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-page]");
+  if (!button || button.disabled) return;
+  state.currentPage = Number(button.dataset.page);
+  renderProducts();
+  document.querySelector("#shop")?.scrollIntoView({ behavior: "smooth", block: "start" });
+});
+
+["scroll", "touchstart", "pointerdown"].forEach((eventName) => {
+  filterRow?.addEventListener(eventName, () => filterScroll?.classList.add("hint-dismissed"), { once: true, passive: true });
 });
 
 document.querySelectorAll("[data-collection-link]").forEach((link) => {
@@ -379,82 +416,18 @@ productGrid.addEventListener("keydown", (event) => {
   openProductModal(card.dataset.productId);
 });
 
-async function fetchProductDetails(productId) {
-  if (state.productDetails.has(productId)) return state.productDetails.get(productId);
-  const data = await shopifyFetch(PRODUCT_DETAIL_QUERY, { id: productId });
-  if (!data.node) throw new Error("Product details are unavailable.");
-  state.productDetails.set(productId, data.node);
-  return data.node;
-}
-
-function chooseVideoSource(sources = []) {
-  return sources.find((source) => source.mimeType === "video/mp4") || sources.find((source) => source.url) || null;
-}
-
-function normalizeProductMedia(product) {
-  const mediaNodes = product.media?.nodes || [];
-  const normalized = mediaNodes.map((media) => {
-    if (media.__typename === "MediaImage" && media.image?.url) {
-      return {
-        type: "image",
-        url: media.image.url,
-        alt: media.image.altText || media.alt || product.title
-      };
-    }
-
-    if (media.__typename === "Video") {
-      const source = chooseVideoSource(media.sources);
-      if (!source?.url) return null;
-      return {
-        type: "video",
-        url: source.url,
-        mimeType: source.mimeType,
-        poster: media.previewImage?.url,
-        alt: media.alt || media.previewImage?.altText || `${product.title} video`
-      };
-    }
-
-    return null;
-  }).filter(Boolean);
-
-  if (normalized.length) return normalized;
-
-  return (product.images?.nodes || []).map((image) => ({
-    type: "image",
-    url: image.url,
-    alt: image.altText || product.title
-  }));
-}
-
-function renderProductMediaGallery(mediaItems, productTitle) {
-  const mediaContainer = document.querySelector("#product-modal-image");
-  if (!mediaItems.length) {
-    mediaContainer.innerHTML = '<div class="product-media-status">Media coming soon.</div>';
-    return;
-  }
-
-  mediaContainer.innerHTML = `
-    <div class="product-media-gallery" aria-label="${escapeHtml(productTitle)} media gallery">
-      ${mediaItems.map((item) => `
-        <figure class="product-media-item product-media-${item.type}">
-          ${item.type === "video"
-            ? `<video controls preload="metadata" ${item.poster ? `poster="${escapeHtml(item.poster)}"` : ""}>
-                <source src="${escapeHtml(item.url)}" ${item.mimeType ? `type="${escapeHtml(item.mimeType)}"` : ""}>
-              </video>`
-            : `<img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt)}" loading="lazy">`
-          }
-        </figure>
-      `).join("")}
-    </div>
-  `;
-}
-
-function renderProductModalDetails(product) {
+function openProductModal(productId) {
+  const product = state.products.all.find((item) => item.id === productId);
+  if (!product) return;
   state.selectedProduct = product;
   document.querySelector("#product-modal-category").textContent = productCategoryLabel(product);
   document.querySelector("#product-modal-title").textContent = product.title;
   document.querySelector("#product-modal-description").innerHTML =
     product.descriptionHtml || `<p>${escapeHtml(product.description || "Details coming soon.")}</p>`;
+  const image = product.featuredImage || product.images.nodes[0];
+  document.querySelector("#product-modal-image").innerHTML = image
+    ? `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.altText || product.title)}">`
+    : "";
   modalVariant.innerHTML = product.variants.nodes.map((variant) => `
     <option value="${escapeHtml(variant.id)}" ${variant.availableForSale ? "" : "disabled"}>
       ${escapeHtml(variantLabel(variant))}${variant.availableForSale ? ` — ${formatMoney(variant.price)}` : " — Sold out"}
@@ -464,40 +437,9 @@ function renderProductModalDetails(product) {
   if (availableVariant) modalVariant.value = availableVariant.id;
   modalQuantity.value = "1";
   updateProductModalVariant();
-}
-
-async function openProductModal(productId) {
-  const product = state.products.all.find((item) => item.id === productId);
-  if (!product) return;
-  const requestId = productId;
-
-  state.productMedia = [];
-  renderProductModalDetails(product);
-  document.querySelector("#product-modal-image").innerHTML = `
-    <div class="product-media-status">
-      <span></span>
-      <p>Loading product media</p>
-    </div>
-  `;
   document.body.classList.add("product-open");
   productModal.setAttribute("aria-hidden", "false");
   document.querySelector(".product-modal-close").focus();
-
-  try {
-    const detailedProduct = await fetchProductDetails(productId);
-    if (requestId !== state.selectedProduct?.id) return;
-    renderProductModalDetails(detailedProduct);
-    state.productMedia = normalizeProductMedia(detailedProduct);
-    renderProductMediaGallery(state.productMedia, detailedProduct.title);
-  } catch (error) {
-    console.error("Shopify product media error:", error);
-    if (requestId !== state.selectedProduct?.id) return;
-    document.querySelector("#product-modal-image").innerHTML = `
-      <div class="product-media-status product-media-error">
-        <p>${escapeHtml(error.message || "We couldn't load this product's media.")}</p>
-      </div>
-    `;
-  }
 }
 
 function closeProductModal() {
@@ -510,6 +452,10 @@ function updateProductModalVariant() {
   document.querySelector("#product-modal-price").textContent = formatMoney(variant?.price);
   modalAddButton.disabled = !variant?.availableForSale;
   modalAddButton.firstChild.textContent = variant?.availableForSale ? "Add to cart " : "Sold out ";
+  if (variant?.image) {
+    document.querySelector("#product-modal-image").innerHTML =
+      `<img src="${escapeHtml(variant.image.url)}" alt="${escapeHtml(variant.image.altText || state.selectedProduct.title)}">`;
+  }
 }
 
 modalVariant.addEventListener("change", updateProductModalVariant);

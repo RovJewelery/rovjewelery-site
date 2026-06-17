@@ -27,6 +27,20 @@
       <a href="#shop" data-collection-link="watches">Watches</a>
       <a href="mailto:info@rovjewelry.com">Support</a>
       <a href="#custom">Custom</a>
+      <div class="mobile-menu-social" aria-label="Social links">
+        <a href="https://www.instagram.com/rov_jewelry" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><circle cx="12" cy="12" r="3.5"></circle><circle cx="17" cy="7" r="1"></circle></svg>
+        </a>
+        <a href="https://pin.it/3zvj9Hrh9" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c1.2-2.8 1.8-5.1 2.1-7"></path><path d="M10.7 13.8c-.6-.6-.9-1.4-.9-2.3 0-2 1.4-3.5 3.4-3.5 1.7 0 2.9 1.1 2.9 2.8 0 2.3-1.2 4.3-3 4.3-.8 0-1.4-.4-1.6-1"></path><path d="M12 3a9 9 0 1 0 6.4 15.4"></path></svg>
+        </a>
+        <a href="https://www.tiktok.com/@rovjewelery" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4v10.2a4 4 0 1 1-3.4-4"></path><path d="M14 4c.5 3 2.2 4.8 5 5"></path></svg>
+        </a>
+        <a href="https://www.facebook.com/share/1Bwom4q7Nv/?mibextid=wwXlfr" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3 0-5 2-5 5v3H6v4h3v4h4v-4h3l1-4h-4V9c0-.6.4-1 1-1Z"></path></svg>
+        </a>
+      </div>
     </nav>
     <div class="header-actions">
       <a href="#shop" aria-label="Search products">
@@ -78,13 +92,16 @@
         <p>Bold silhouettes. Meticulous stonework. Each RovJewelery piece is selected for presence and finished to endure.</p>
       </div>
 
-      <div class="filter-row reveal" role="tablist" aria-label="Product categories">
-        <button class="filter active" type="button" data-filter="all">All <sup>0</sup></button>
-        <button class="filter" type="button" data-filter="chains">Chains <sup>0</sup></button>
-        <button class="filter" type="button" data-filter="necklaces">Necklaces <sup>0</sup></button>
-        <button class="filter" type="button" data-filter="bracelets">Bracelets <sup>0</sup></button>
-        <button class="filter" type="button" data-filter="watches">Watches <sup>0</sup></button>
-        <button class="filter" type="button" data-filter="custom">Custom Order <sup>01</sup></button>
+      <div class="filter-scroll reveal">
+        <div class="filter-row" role="tablist" aria-label="Product categories">
+          <button class="filter active" type="button" data-filter="all">All <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="chains">Chains <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="necklaces">Necklaces <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="bracelets">Bracelets <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="watches">Watches <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="custom">Custom Order <sup>01</sup></button>
+        </div>
+        <span class="filter-scroll-hint" aria-hidden="true">swipe</span>
       </div>
 
       <div class="product-grid" id="product-grid" aria-live="polite">
@@ -93,6 +110,7 @@
           <p>Loading the collection</p>
         </div>
       </div>
+      <div class="pagination" id="pagination" aria-label="Product pagination"></div>
     </section>
 
     <section class="manifesto">
