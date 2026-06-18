@@ -74,13 +74,31 @@ const PRODUCT_FIELDS = `
   descriptionHtml
   availableForSale
   featuredImage { url altText width height }
-  images(first: 10) { nodes { url altText width height } }
+  images(first: 20) { nodes { url altText width height } }
+  media(first: 50) {
+    nodes {
+      mediaContentType
+      alt
+      previewImage { url altText width height }
+      ... on MediaImage {
+        image { url altText width height }
+      }
+      ... on Video {
+        sources { url mimeType format height width }
+      }
+      ... on ExternalVideo {
+        embeddedUrl
+        host
+      }
+    }
+  }
   priceRange { minVariantPrice { amount currencyCode } }
   variants(first: 100) {
     nodes {
       id
       title
       availableForSale
+      sku
       price { amount currencyCode }
       image { url altText }
       selectedOptions { name value }
@@ -159,6 +177,180 @@ function productCategoryLabel(product) {
 function variantLabel(variant) {
   if (!variant || variant.title === "Default Title") return "Standard";
   return variant.selectedOptions?.map((option) => option.value).join(" / ") || variant.title;
+}
+
+function getProductMedia(product) {
+  const seen = new Set();
+  const media = [];
+  (product.media?.nodes || []).forEach((item) => {
+    if (!item) return;
+    const image = item.image || item.previewImage;
+    const videoSource = item.sources?.find((source) => source.mimeType === "video/mp4") || item.sources?.[0];
+    const url = item.mediaContentType === "VIDEO" ? videoSource?.url : image?.url || item.embeddedUrl;
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    media.push({
+      type: item.mediaContentType === "VIDEO" ? "video" : item.mediaContentType === "EXTERNAL_VIDEO" ? "externalVideo" : "image",
+      url,
+      mimeType: videoSource?.mimeType || "video/mp4",
+      alt: item.alt || image?.altText || product.title,
+      preview: item.previewImage?.url || image?.url || "",
+      width: image?.width,
+      height: image?.height
+    });
+  });
+
+  [product.featuredImage, ...(product.images?.nodes || [])].forEach((image) => {
+    if (!image?.url || seen.has(image.url)) return;
+    seen.add(image.url);
+    media.push({ type: "image", url: image.url, alt: image.altText || product.title, preview: image.url, width: image.width, height: image.height });
+  });
+
+  return media;
+}
+
+function renderMediaItem(item, product, index, isActive = false) {
+  const activeClass = isActive ? " active" : "";
+  const hidden = isActive ? "" : ' aria-hidden="true"';
+  if (item.type === "video") {
+    return `
+      <div class="product-gallery-slide${activeClass}" data-media-index="${index}"${hidden}>
+        <video muted loop playsinline preload="${index === 0 ? "metadata" : "none"}" ${isActive ? "autoplay" : ""} poster="${escapeHtml(item.preview || "")}">
+          <source src="${escapeHtml(item.url)}" type="${escapeHtml(item.mimeType)}">
+        </video>
+      </div>
+    `;
+  }
+  if (item.type === "externalVideo") {
+    return `
+      <div class="product-gallery-slide${activeClass}" data-media-index="${index}"${hidden}>
+        <iframe src="${escapeHtml(item.url)}" title="${escapeHtml(item.alt || product.title)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    `;
+  }
+  return `
+    <div class="product-gallery-slide${activeClass}" data-media-index="${index}"${hidden}>
+      <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt || product.title)}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async">
+    </div>
+  `;
+}
+
+function renderProductGallery(product, activeIndex = 0) {
+  const media = getProductMedia(product);
+  if (!media.length) return "";
+  const safeIndex = Math.min(Math.max(activeIndex, 0), media.length - 1);
+  return `
+    <div class="product-gallery" data-gallery-index="${safeIndex}">
+      <div class="product-gallery-stage">
+        ${media.map((item, index) => renderMediaItem(item, product, index, index === safeIndex)).join("")}
+      </div>
+      ${media.length > 1 ? `
+        <div class="product-gallery-thumbs" aria-label="Product media">
+          ${media.map((item, index) => `
+            <button class="product-gallery-thumb ${index === safeIndex ? "active" : ""}" type="button" data-media-index="${index}" aria-label="View media ${index + 1}">
+              ${item.type === "video" || item.type === "externalVideo" ? '<span class="media-play">Play</span>' : ""}
+              ${item.preview ? `<img src="${escapeHtml(item.preview)}" alt="" loading="lazy" decoding="async">` : `<span>${index + 1}</span>`}
+            </button>
+          `).join("")}
+        </div>
+      ` : ""}
+    </div>
+  `;
+}
+
+function switchProductMedia(index) {
+  const gallery = document.querySelector(".product-gallery");
+  if (!gallery) return;
+  const slides = gallery.querySelectorAll(".product-gallery-slide");
+  const thumbs = gallery.querySelectorAll(".product-gallery-thumb");
+  const nextIndex = Math.min(Math.max(Number(index) || 0, 0), slides.length - 1);
+  slides.forEach((slide, slideIndex) => {
+    const isActive = slideIndex === nextIndex;
+    slide.classList.toggle("active", isActive);
+    slide.setAttribute("aria-hidden", isActive ? "false" : "true");
+    const video = slide.querySelector("video");
+    if (video) {
+      if (isActive) video.play().catch(() => {});
+      else video.pause();
+    }
+  });
+  thumbs.forEach((thumb, thumbIndex) => thumb.classList.toggle("active", thumbIndex === nextIndex));
+  gallery.dataset.galleryIndex = String(nextIndex);
+}
+
+function normalizedOptionName(name = "") {
+  return String(name).toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function getVariantOption(variant, wantedNames) {
+  const names = wantedNames.map(normalizedOptionName);
+  return variant.selectedOptions?.find((option) => names.includes(normalizedOptionName(option.name)))?.value || "";
+}
+
+function variantMaterial(variant) {
+  return getVariantOption(variant, ["material", "metal", "color", "gold"]);
+}
+
+function variantMmSize(variant) {
+  return getVariantOption(variant, ["mm size", "mm", "width", "size"]);
+}
+
+function variantLength(variant) {
+  return getVariantOption(variant, ["length", "chain length", "bracelet length", "necklace length"]);
+}
+
+function hasStructuredVariantOptions(product) {
+  const variants = product.variants?.nodes || [];
+  if (variants.length <= 1 || variants[0]?.title === "Default Title") return false;
+  if (!["chains", "necklaces", "bracelets"].some((category) => productMatchesCategory(product, category))) return false;
+  return variants.some(variantMaterial) && variants.some(variantMmSize) && variants.some(variantLength);
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function renderChoiceButtons(product, selectedVariant) {
+  if (!hasStructuredVariantOptions(product)) return "";
+  const variants = product.variants.nodes;
+  const selectedMaterial = variantMaterial(selectedVariant) || variantMaterial(variants[0]);
+  const selectedMm = variantMmSize(selectedVariant) || variantMmSize(variants[0]);
+  const selectedLength = variantLength(selectedVariant) || variantLength(variants[0]);
+  const materials = uniqueValues(variants.map(variantMaterial));
+  const sizes = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial).map(variantMmSize));
+  const lengths = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial && variantMmSize(variant) === selectedMm).map(variantLength));
+
+  const button = (step, value, selected, enabled) => `
+    <button class="variant-choice ${selected ? "selected" : ""}" type="button" data-variant-step="${step}" data-variant-value="${escapeHtml(value)}" ${enabled ? "" : "disabled"}>
+      ${escapeHtml(value)}
+    </button>
+  `;
+
+  return `
+    <div class="variant-builder" aria-label="Choose product options">
+      <div class="variant-step" data-step="material">
+        <span>Material</span>
+        <div>${materials.map((value) => button("material", value, value === selectedMaterial, true)).join("")}</div>
+      </div>
+      <div class="variant-step" data-step="mm">
+        <span>MM Size</span>
+        <div>${sizes.map((value) => button("mm", value, value === selectedMm, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantMmSize(variant) === value))).join("")}</div>
+      </div>
+      <div class="variant-step" data-step="length">
+        <span>Length</span>
+        <div>${lengths.map((value) => button("length", value, value === selectedLength, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantMmSize(variant) === selectedMm && variantLength(variant) === value))).join("")}</div>
+      </div>
+      <p class="variant-meta" id="variant-meta"></p>
+    </div>
+  `;
+}
+
+function findVariantByStructuredSelection(product, selection) {
+  return product.variants.nodes.find((variant) =>
+    (!selection.material || variantMaterial(variant) === selection.material) &&
+    (!selection.mm || variantMmSize(variant) === selection.mm) &&
+    (!selection.length || variantLength(variant) === selection.length)
+  );
 }
 
 function renderProductCard(product) {
@@ -452,10 +644,7 @@ function openProductModal(productId) {
   document.querySelector("#product-modal-title").textContent = product.title;
   document.querySelector("#product-modal-description").innerHTML =
     product.descriptionHtml || `<p>${escapeHtml(product.description || "Details coming soon.")}</p>`;
-  const image = product.featuredImage || product.images.nodes[0];
-  document.querySelector("#product-modal-image").innerHTML = image
-    ? `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.altText || product.title)}">`
-    : "";
+  document.querySelector("#product-modal-image").innerHTML = renderProductGallery(product);
   modalVariant.innerHTML = product.variants.nodes.map((variant) => `
     <option value="${escapeHtml(variant.id)}" ${variant.availableForSale ? "" : "disabled"}>
       ${escapeHtml(variantLabel(variant))}${variant.availableForSale ? ` — ${formatMoney(variant.price)}` : " — Sold out"}
@@ -463,6 +652,7 @@ function openProductModal(productId) {
   `).join("");
   const availableVariant = product.variants.nodes.find((variant) => variant.availableForSale);
   if (availableVariant) modalVariant.value = availableVariant.id;
+  renderModalVariantBuilder();
   modalQuantity.value = "1";
   updateProductModalVariant();
   document.body.classList.add("product-open");
@@ -475,18 +665,85 @@ function closeProductModal() {
   productModal.setAttribute("aria-hidden", "true");
 }
 
+function renderModalVariantBuilder() {
+  const product = state.selectedProduct;
+  const selectedVariant = product?.variants.nodes.find((item) => item.id === modalVariant.value);
+  const existing = document.querySelector(".variant-builder");
+  if (existing) existing.remove();
+  const shouldEnhance = hasStructuredVariantOptions(product || {});
+  modalVariant.closest("label")?.classList.toggle("enhanced-hidden", shouldEnhance);
+  if (!product || !shouldEnhance) return;
+  modalVariant.closest("label")?.insertAdjacentHTML("afterend", renderChoiceButtons(product, selectedVariant || product.variants.nodes[0]));
+}
+
 function updateProductModalVariant() {
   const variant = state.selectedProduct?.variants.nodes.find((item) => item.id === modalVariant.value);
   document.querySelector("#product-modal-price").textContent = formatMoney(variant?.price);
   modalAddButton.disabled = !variant?.availableForSale;
   modalAddButton.firstChild.textContent = variant?.availableForSale ? "Add to cart " : "Sold out ";
+  const variantMeta = document.querySelector("#variant-meta");
+  if (variantMeta) {
+    const sku = variant?.sku ? `SKU ${variant.sku}` : "";
+    const stock = variant?.availableForSale ? "Available" : "Sold out";
+    variantMeta.textContent = [sku, stock].filter(Boolean).join(" / ");
+  }
   if (variant?.image) {
-    document.querySelector("#product-modal-image").innerHTML =
-      `<img src="${escapeHtml(variant.image.url)}" alt="${escapeHtml(variant.image.altText || state.selectedProduct.title)}">`;
+    const mediaIndex = getProductMedia(state.selectedProduct).findIndex((item) => item.url === variant.image.url);
+    if (mediaIndex >= 0) switchProductMedia(mediaIndex);
   }
 }
 
-modalVariant.addEventListener("change", updateProductModalVariant);
+modalVariant.addEventListener("change", () => {
+  renderModalVariantBuilder();
+  updateProductModalVariant();
+});
+document.querySelector("#product-modal-image").addEventListener("click", (event) => {
+  const thumb = event.target.closest(".product-gallery-thumb");
+  if (!thumb) return;
+  switchProductMedia(thumb.dataset.mediaIndex);
+});
+document.querySelector("#product-modal-image").addEventListener("touchstart", (event) => {
+  const gallery = event.target.closest(".product-gallery");
+  if (!gallery) return;
+  gallery.dataset.touchStartX = String(event.touches[0].clientX);
+}, { passive: true });
+document.querySelector("#product-modal-image").addEventListener("touchend", (event) => {
+  const gallery = event.target.closest(".product-gallery");
+  if (!gallery) return;
+  const startX = Number(gallery.dataset.touchStartX || 0);
+  const deltaX = event.changedTouches[0].clientX - startX;
+  if (Math.abs(deltaX) < 35) return;
+  const current = Number(gallery.dataset.galleryIndex || 0);
+  const total = gallery.querySelectorAll(".product-gallery-slide").length;
+  switchProductMedia(deltaX < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0));
+}, { passive: true });
+productModal.addEventListener("click", (event) => {
+  const choice = event.target.closest(".variant-choice");
+  if (!choice || !state.selectedProduct) return;
+  const currentVariant = state.selectedProduct.variants.nodes.find((item) => item.id === modalVariant.value) || state.selectedProduct.variants.nodes[0];
+  const selection = {
+    material: variantMaterial(currentVariant),
+    mm: variantMmSize(currentVariant),
+    length: variantLength(currentVariant)
+  };
+  selection[choice.dataset.variantStep] = choice.dataset.variantValue;
+
+  if (choice.dataset.variantStep === "material") {
+    const next = findVariantByStructuredSelection(state.selectedProduct, { material: selection.material }) || currentVariant;
+    selection.mm = variantMmSize(next);
+    selection.length = variantLength(next);
+  }
+  if (choice.dataset.variantStep === "mm") {
+    const next = findVariantByStructuredSelection(state.selectedProduct, { material: selection.material, mm: selection.mm }) || currentVariant;
+    selection.length = variantLength(next);
+  }
+
+  const variant = findVariantByStructuredSelection(state.selectedProduct, selection);
+  if (!variant) return;
+  modalVariant.value = variant.id;
+  renderModalVariantBuilder();
+  updateProductModalVariant();
+});
 document.querySelectorAll("[data-modal-quantity]").forEach((button) => {
   button.addEventListener("click", () => {
     const next = Math.max(1, Number(modalQuantity.value || 1) + Number(button.dataset.modalQuantity));
