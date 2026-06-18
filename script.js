@@ -287,16 +287,30 @@ function getVariantOption(variant, wantedNames) {
   return variant.selectedOptions?.find((option) => names.includes(normalizedOptionName(option.name)))?.value || "";
 }
 
+function findVariantValue(variant, matcher) {
+  return variant.selectedOptions?.find((option) => matcher(String(option.value || "")))?.value || "";
+}
+
+function variantOptionByIndex(variant, index) {
+  return variant.selectedOptions?.[index]?.value || "";
+}
+
 function variantMaterial(variant) {
-  return getVariantOption(variant, ["material", "metal", "color", "gold"]);
+  return getVariantOption(variant, ["material", "stone", "stone type", "diamond", "metal", "color", "gold", "quality"]) ||
+    findVariantValue(variant, (value) => /moissanite|diamond|natural|lab|gold|silver|sterling|rose|white|yellow|10k|14k|18k/i.test(value)) ||
+    variantOptionByIndex(variant, 0);
 }
 
 function variantMmSize(variant) {
-  return getVariantOption(variant, ["mm size", "mm", "width", "size"]);
+  return getVariantOption(variant, ["stone size", "stone size mm", "mm size", "mm", "width", "size"]) ||
+    findVariantValue(variant, (value) => /\b\d+(\.\d+)?\s*mm\b/i.test(value)) ||
+    variantOptionByIndex(variant, 2);
 }
 
 function variantLength(variant) {
-  return getVariantOption(variant, ["length", "chain length", "bracelet length", "necklace length"]);
+  return getVariantOption(variant, ["length", "chain length", "bracelet length", "necklace length"]) ||
+    findVariantValue(variant, (value) => /\b\d+(\.\d+)?\s*(?:"|in\b|inch\b|inches\b)/i.test(value)) ||
+    variantOptionByIndex(variant, 1);
 }
 
 function hasStructuredVariantOptions(product) {
@@ -314,11 +328,11 @@ function renderChoiceButtons(product, selectedVariant) {
   if (!hasStructuredVariantOptions(product)) return "";
   const variants = product.variants.nodes;
   const selectedMaterial = variantMaterial(selectedVariant) || variantMaterial(variants[0]);
-  const selectedMm = variantMmSize(selectedVariant) || variantMmSize(variants[0]);
   const selectedLength = variantLength(selectedVariant) || variantLength(variants[0]);
+  const selectedMm = variantMmSize(selectedVariant) || variantMmSize(variants[0]);
   const materials = uniqueValues(variants.map(variantMaterial));
-  const sizes = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial).map(variantMmSize));
-  const lengths = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial && variantMmSize(variant) === selectedMm).map(variantLength));
+  const lengths = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial).map(variantLength));
+  const sizes = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial && variantLength(variant) === selectedLength).map(variantMmSize));
 
   const button = (step, value, selected, enabled) => `
     <button class="variant-choice ${selected ? "selected" : ""}" type="button" data-variant-step="${step}" data-variant-value="${escapeHtml(value)}" ${enabled ? "" : "disabled"}>
@@ -332,13 +346,13 @@ function renderChoiceButtons(product, selectedVariant) {
         <span>Material</span>
         <div>${materials.map((value) => button("material", value, value === selectedMaterial, true)).join("")}</div>
       </div>
-      <div class="variant-step" data-step="mm">
-        <span>MM Size</span>
-        <div>${sizes.map((value) => button("mm", value, value === selectedMm, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantMmSize(variant) === value))).join("")}</div>
-      </div>
       <div class="variant-step" data-step="length">
         <span>Length</span>
-        <div>${lengths.map((value) => button("length", value, value === selectedLength, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantMmSize(variant) === selectedMm && variantLength(variant) === value))).join("")}</div>
+        <div>${lengths.map((value) => button("length", value, value === selectedLength, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantLength(variant) === value))).join("")}</div>
+      </div>
+      <div class="variant-step" data-step="mm">
+        <span>Stone Size</span>
+        <div>${sizes.map((value) => button("mm", value, value === selectedMm, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantLength(variant) === selectedLength && variantMmSize(variant) === value))).join("")}</div>
       </div>
       <p class="variant-meta" id="variant-meta"></p>
     </div>
@@ -730,12 +744,12 @@ productModal.addEventListener("click", (event) => {
 
   if (choice.dataset.variantStep === "material") {
     const next = findVariantByStructuredSelection(state.selectedProduct, { material: selection.material }) || currentVariant;
+    selection.length = variantLength(next);
     selection.mm = variantMmSize(next);
-    selection.length = variantLength(next);
   }
-  if (choice.dataset.variantStep === "mm") {
-    const next = findVariantByStructuredSelection(state.selectedProduct, { material: selection.material, mm: selection.mm }) || currentVariant;
-    selection.length = variantLength(next);
+  if (choice.dataset.variantStep === "length") {
+    const next = findVariantByStructuredSelection(state.selectedProduct, { material: selection.material, length: selection.length }) || currentVariant;
+    selection.mm = variantMmSize(next);
   }
 
   const variant = findVariantByStructuredSelection(state.selectedProduct, selection);
