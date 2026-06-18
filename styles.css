@@ -205,7 +205,7 @@ footer { background: #030303; border-top: 1px solid var(--line); }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,.07); min-height: 60px; padding: 0 5vw; display: flex; align-items: center; justify-content: space-between; color: #625d55; text-transform: uppercase; letter-spacing: .13em; font-size: 7px; }
 .footer-bottom div { display: flex; gap: 28px; }
 .product-modal-overlay { position: fixed; inset: 0; z-index: 42; background: rgba(0,0,0,.82); opacity: 0; visibility: hidden; transition: .35s ease; }
-.product-modal { position: fixed; z-index: 43; inset: 3vh 3vw; background: #0d0b08; border: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(380px, 1fr); opacity: 0; visibility: hidden; transform: translateY(18px); transition: .35s ease; overflow: hidden; }
+.product-modal { position: fixed; z-index: 43; inset: 3vh 3vw; background: #0d0b08; border: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 60%) minmax(360px, 40%); opacity: 0; visibility: hidden; transform: translateY(18px); transition: .35s ease; overflow: hidden; }
 .product-open .product-modal-overlay { opacity: 1; visibility: visible; }
 .product-open .product-modal { opacity: 1; visibility: visible; transform: none; }
 .product-open { overflow: hidden; }
@@ -230,15 +230,6 @@ footer { background: #030303; border-top: 1px solid var(--line); }
 .product-modal-description ul { padding-left: 20px; }
 .product-modal-content > label { margin-top: 20px; }
 .product-modal-content select { height: 44px; padding-right: 25px; }
-.enhanced-hidden { display: none !important; }
-.variant-builder { display: grid; gap: 16px; margin-top: 28px; padding: 24px 0 6px; border-top: 1px solid var(--line); border-bottom: 1px solid rgba(212,168,47,.12); }
-.variant-row { display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: center; gap: 12px; }
-.variant-row > span { color: var(--gold-light); font-family: var(--serif); font-size: 18px; letter-spacing: .04em; }
-.variant-row > div { display: grid; grid-template-columns: repeat(5, minmax(48px, 1fr)); gap: 9px; }
-.variant-choice { min-height: 40px; padding: 0 15px; border: 1px solid rgba(212,168,47,.28); background: #0b0a08; color: #c8c0b3; cursor: pointer; text-transform: uppercase; letter-spacing: .11em; font-size: 8px; transition: .25s ease; }
-.variant-choice:hover:not(:disabled), .variant-choice.selected { background: var(--gold); color: #080705; border-color: var(--gold); box-shadow: 0 0 20px rgba(212,168,47,.2); }
-.variant-choice:disabled { opacity: .32; cursor: not-allowed; }
-.variant-meta { min-height: 16px; margin: 0; color: #777168; text-transform: uppercase; letter-spacing: .14em; font-size: 8px; }
 .modal-quantity { width: 130px; height: 42px; display: grid; grid-template-columns: 38px 1fr 38px; border: 1px solid #494236; }
 .modal-quantity button { border: 0; background: transparent; cursor: pointer; color: var(--gold-light); }
 .modal-quantity input { border: 0; padding: 0; text-align: center; appearance: textfield; }
@@ -281,7 +272,7 @@ footer { background: #030303; border-top: 1px solid var(--line); }
 
 @media (max-width: 1050px) {
   .desktop-nav-social { display: none; }
-  .product-modal { inset: 3vh 2.5vw; grid-template-columns: minmax(0, 1.25fr) minmax(340px, .9fr); }
+  .product-modal { inset: 3vh 2.5vw; grid-template-columns: minmax(0, 58%) minmax(330px, 42%); }
   .product-image { height: 410px; }
   .custom-section { grid-template-columns: 1fr 1.2fr; gap: 5vw; }
   .support-section { grid-template-columns: 1fr 1.5fr; }
@@ -372,11 +363,6 @@ footer { background: #030303; border-top: 1px solid var(--line); }
   .product-modal-content { padding: 30px 22px calc(30px + env(safe-area-inset-bottom)); overflow-y: auto; overscroll-behavior: contain; }
   .product-modal-content h2 { font-size: clamp(36px, 9vw, 54px); }
   .product-modal-description { max-height: none; }
-  .variant-builder { gap: 16px; margin-top: 24px; }
-  .variant-row { grid-template-columns: 1fr; align-items: start; gap: 8px; }
-  .variant-row > span { font-size: 17px; }
-  .variant-row > div { grid-template-columns: repeat(5, minmax(44px, 1fr)); gap: 7px; }
-  .variant-choice { min-height: 44px; padding-inline: 14px; }
   .product-modal-content > .button { position: sticky; bottom: 0; z-index: 2; min-height: 54px; box-shadow: 0 -16px 24px #0d0b08; }
   .cart-drawer { width: min(100vw, 480px); }
   .cart-header { min-height: 110px; }

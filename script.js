@@ -278,91 +278,6 @@ function switchProductMedia(index) {
   gallery.dataset.galleryIndex = String(nextIndex);
 }
 
-function normalizedOptionName(name = "") {
-  return String(name).toLowerCase().replace(/[^a-z0-9]/g, "");
-}
-
-function getVariantOption(variant, wantedNames) {
-  const names = wantedNames.map(normalizedOptionName);
-  return variant.selectedOptions?.find((option) => names.includes(normalizedOptionName(option.name)))?.value || "";
-}
-
-function findVariantValue(variant, matcher) {
-  return variant.selectedOptions?.find((option) => matcher(String(option.value || "")))?.value || "";
-}
-
-function variantOptionByIndex(variant, index) {
-  return variant.selectedOptions?.[index]?.value || "";
-}
-
-function variantMaterial(variant) {
-  return getVariantOption(variant, ["material", "stone", "stone type", "diamond", "metal", "color", "gold", "quality"]) ||
-    findVariantValue(variant, (value) => /moissanite|diamond|natural|lab|gold|silver|sterling|rose|white|yellow|10k|14k|18k/i.test(value)) ||
-    variantOptionByIndex(variant, 0);
-}
-
-function variantMmSize(variant) {
-  return getVariantOption(variant, ["stone size", "stone size mm", "mm size", "mm", "width", "size"]) ||
-    findVariantValue(variant, (value) => /\b\d+(\.\d+)?\s*mm\b/i.test(value)) ||
-    variantOptionByIndex(variant, 2);
-}
-
-function variantLength(variant) {
-  return getVariantOption(variant, ["length", "chain length", "bracelet length", "necklace length"]) ||
-    findVariantValue(variant, (value) => /\b\d+(\.\d+)?\s*(?:"|in\b|inch\b|inches\b)/i.test(value)) ||
-    variantOptionByIndex(variant, 1);
-}
-
-function hasStructuredVariantOptions(product) {
-  const variants = product.variants?.nodes || [];
-  if (variants.length <= 1 || variants[0]?.title === "Default Title") return false;
-  if (!["chains", "necklaces", "bracelets"].some((category) => productMatchesCategory(product, category))) return false;
-  return variants.some(variantMmSize) && variants.some(variantLength);
-}
-
-function uniqueValues(values) {
-  return [...new Set(values.filter(Boolean))];
-}
-
-function renderChoiceButtons(product, selectedVariant) {
-  if (!hasStructuredVariantOptions(product)) return "";
-  const variants = product.variants.nodes;
-  const selectedMm = variantMmSize(selectedVariant) || variantMmSize(variants[0]);
-  const selectedLength = variantLength(selectedVariant) || variantLength(variants[0]);
-  const sizes = uniqueValues(variants.map(variantMmSize));
-  const lengths = uniqueValues(variants.map(variantLength));
-  const button = (variant, length) => `
-    <button class="variant-choice ${variant?.id === selectedVariant?.id ? "selected" : ""}" type="button" data-variant-id="${escapeHtml(variant?.id || "")}" ${variant?.availableForSale ? "" : "disabled"}>
-      ${escapeHtml(length)}
-    </button>
-  `;
-
-  return `
-    <div class="variant-builder" aria-label="Choose product options">
-      ${sizes.map((size) => `
-        <div class="variant-row ${size === selectedMm ? "active" : ""}">
-          <span>${escapeHtml(size)}</span>
-          <div>
-            ${lengths.map((length) => {
-              const variant = variants.find((item) => variantMmSize(item) === size && variantLength(item) === length);
-              return button(variant, length);
-            }).join("")}
-          </div>
-        </div>
-      `).join("")}
-      <p class="variant-meta" id="variant-meta"></p>
-    </div>
-  `;
-}
-
-function findVariantByStructuredSelection(product, selection) {
-  return product.variants.nodes.find((variant) =>
-    (!selection.material || variantMaterial(variant) === selection.material) &&
-    (!selection.mm || variantMmSize(variant) === selection.mm) &&
-    (!selection.length || variantLength(variant) === selection.length)
-  );
-}
-
 function renderProductCard(product) {
   const variants = product.variants?.nodes || [];
   const availableVariants = variants.filter((variant) => variant.availableForSale);
@@ -662,7 +577,6 @@ function openProductModal(productId) {
   `).join("");
   const availableVariant = product.variants.nodes.find((variant) => variant.availableForSale);
   if (availableVariant) modalVariant.value = availableVariant.id;
-  renderModalVariantBuilder();
   modalQuantity.value = "1";
   updateProductModalVariant();
   document.body.classList.add("product-open");
@@ -675,38 +589,18 @@ function closeProductModal() {
   productModal.setAttribute("aria-hidden", "true");
 }
 
-function renderModalVariantBuilder() {
-  const product = state.selectedProduct;
-  const selectedVariant = product?.variants.nodes.find((item) => item.id === modalVariant.value);
-  const existing = document.querySelector(".variant-builder");
-  if (existing) existing.remove();
-  const shouldEnhance = hasStructuredVariantOptions(product || {});
-  modalVariant.closest("label")?.classList.toggle("enhanced-hidden", shouldEnhance);
-  if (!product || !shouldEnhance) return;
-  modalVariant.closest("label")?.insertAdjacentHTML("afterend", renderChoiceButtons(product, selectedVariant || product.variants.nodes[0]));
-}
-
 function updateProductModalVariant() {
   const variant = state.selectedProduct?.variants.nodes.find((item) => item.id === modalVariant.value);
   document.querySelector("#product-modal-price").textContent = formatMoney(variant?.price);
   modalAddButton.disabled = !variant?.availableForSale;
   modalAddButton.firstChild.textContent = variant?.availableForSale ? "Add to cart " : "Sold out ";
-  const variantMeta = document.querySelector("#variant-meta");
-  if (variantMeta) {
-    const sku = variant?.sku ? `SKU ${variant.sku}` : "";
-    const stock = variant?.availableForSale ? "Available" : "Sold out";
-    variantMeta.textContent = [sku, stock].filter(Boolean).join(" / ");
-  }
   if (variant?.image) {
     const mediaIndex = getProductMedia(state.selectedProduct).findIndex((item) => item.url === variant.image.url);
     if (mediaIndex >= 0) switchProductMedia(mediaIndex);
   }
 }
 
-modalVariant.addEventListener("change", () => {
-  renderModalVariantBuilder();
-  updateProductModalVariant();
-});
+modalVariant.addEventListener("change", updateProductModalVariant);
 document.querySelector("#product-modal-image").addEventListener("click", (event) => {
   const thumb = event.target.closest(".product-gallery-thumb");
   if (!thumb) return;
@@ -727,15 +621,6 @@ document.querySelector("#product-modal-image").addEventListener("touchend", (eve
   const total = gallery.querySelectorAll(".product-gallery-slide").length;
   switchProductMedia(deltaX < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0));
 }, { passive: true });
-productModal.addEventListener("click", (event) => {
-  const choice = event.target.closest(".variant-choice");
-  if (!choice || !state.selectedProduct) return;
-  const variant = state.selectedProduct.variants.nodes.find((item) => item.id === choice.dataset.variantId);
-  if (!variant) return;
-  modalVariant.value = variant.id;
-  renderModalVariantBuilder();
-  updateProductModalVariant();
-});
 document.querySelectorAll("[data-modal-quantity]").forEach((button) => {
   button.addEventListener("click", () => {
     const next = Math.max(1, Number(modalQuantity.value || 1) + Number(button.dataset.modalQuantity));
