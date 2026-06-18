@@ -651,7 +651,7 @@ function renderCart() {
             <div class="quantity-control">
               <button type="button" data-quantity-change="-1" aria-label="Decrease quantity">−</button>
               <span>${line.quantity}</span>
-              <button type="button" data-quantity-change="1" aria-label="Increase quantity">+</button>
+              <button type="button" data-quantity-change="1" aria-label="Increase quantity">More</button>
             </div>
             <button class="remove-line" type="button" data-remove-line>Remove</button>
           </div>
@@ -813,6 +813,42 @@ function setupHeroVideo() {
   });
 }
 
+function setupCraftVideos() {
+  const videos = document.querySelectorAll(".craft-media");
+  if (!videos.length) return;
+
+  const playVideo = (video) => {
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.load();
+    video.play().catch(() => {
+      video.closest(".craft-video")?.classList.add("video-fallback");
+    });
+  };
+
+  if (!("IntersectionObserver" in window)) {
+    videos.forEach(playVideo);
+    return;
+  }
+
+  const videoObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      playVideo(entry.target);
+      videoObserver.unobserve(entry.target);
+    });
+  }, { rootMargin: "140px 0px", threshold: 0.15 });
+
+  videos.forEach((video) => {
+    video.addEventListener("error", () => video.closest(".craft-video")?.classList.add("video-fallback"), { once: true });
+    videoObserver.observe(video);
+  });
+}
+
 setupHeroVideo();
+setupCraftVideos();
 loadCatalog();
 restoreCart();

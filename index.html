@@ -72,7 +72,7 @@
         <h1>Make your<br><em>mark.</em></h1>
         <p class="hero-copy">Statement jewelry and one-of-one pieces, designed to outlive the moment.</p>
         <div class="hero-actions">
-          <a class="button button-gold" href="#shop">Shop now <span>â†—</span></a>
+          <a class="button button-gold" href="#shop">Shop now</a>
           <a class="button button-ghost" href="#custom">Start custom order</a>
         </div>
       </div>
@@ -127,27 +127,27 @@
         <p>Every piece is crafted with precision, intention, and attention to detail. From concept to final polish, we focus on creating jewelry that reflects quality, character, and individuality.</p>
       </div>
       <div class="craft-video craft-video-large reveal">
-        <video muted loop playsinline controls preload="none">
+        <video class="craft-media" autoplay muted loop playsinline preload="metadata" poster="./assets/craft/craft-poster.svg">
           <source src="./assets/craft/craft-01.mp4" type="video/mp4">
         </video>
       </div>
       <div class="craft-video craft-video-tall reveal">
-        <video muted loop playsinline controls preload="none">
+        <video class="craft-media" autoplay muted loop playsinline preload="metadata" poster="./assets/craft/craft-poster.svg">
           <source src="./assets/craft/craft-02.mp4" type="video/mp4">
         </video>
       </div>
       <div class="craft-video craft-video-small craft-video-a reveal">
-        <video muted loop playsinline controls preload="none">
+        <video class="craft-media" autoplay muted loop playsinline preload="metadata" poster="./assets/craft/craft-poster.svg">
           <source src="./assets/craft/craft-03.mp4" type="video/mp4">
         </video>
       </div>
       <div class="craft-video craft-video-small craft-video-b reveal">
-        <video muted loop playsinline controls preload="none">
+        <video class="craft-media" autoplay muted loop playsinline preload="metadata" poster="./assets/craft/craft-poster.svg">
           <source src="./assets/craft/craft-04.mp4" type="video/mp4">
         </video>
       </div>
       <div class="craft-video craft-video-wide reveal">
-        <video muted loop playsinline controls preload="none">
+        <video class="craft-media" autoplay muted loop playsinline preload="metadata" poster="./assets/craft/craft-poster.svg">
           <source src="./assets/craft/craft-05.mp4" type="video/mp4">
         </video>
       </div>
@@ -172,7 +172,7 @@
       <form class="luxury-form reveal" id="custom-form">
         <div class="form-heading">
           <span>Project inquiry</span>
-          <small>Typically replies within 1â€“2 business days</small>
+        <small>Typically replies within 1-2 business days</small>
         </div>
         <div class="field-grid">
           <label>Full name<input type="text" name="name" placeholder="Your name" required></label>
@@ -187,16 +187,16 @@
           <label>Ideal budget
             <select name="budget" required>
               <option value="">Select a range</option>
-              <option>$500 â€“ $1,500</option><option>$1,500 â€“ $5,000</option><option>$5,000 â€“ $10,000</option><option>$10,000+</option>
+              <option>$500 to $1,500</option><option>$1,500 to $5,000</option><option>$5,000 to $10,000</option><option>$10,000 plus</option>
             </select>
           </label>
           <label class="upload-field">Inspiration image
             <input id="inspiration-file" type="file" name="image" accept="image/*">
-            <span class="upload-ui"><b>+</b><span class="file-name">Upload an image</span></span>
+            <span class="upload-ui"><b>Add</b><span class="file-name">Upload an image</span></span>
           </label>
         </div>
         <label>Tell us about your piece<textarea name="description" placeholder="Describe the piece, material, stones, size, or anything else you have in mind..." required></textarea></label>
-        <button class="button button-gold submit-button" type="submit">Submit project <span>â†—</span></button>
+        <button class="button button-gold submit-button" type="submit">Submit project</button>
         <p class="form-note">By submitting, you agree to be contacted about your inquiry.</p>
         <div class="form-success" role="status">Your vision is in good hands. We'll be in touch shortly.</div>
       </form>
@@ -212,19 +212,19 @@
       <div class="faq reveal">
         <h3>Frequently asked</h3>
         <details>
-          <summary>What materials do you use?<span>+</span></summary>
+          <summary>What materials do you use?<span>Open</span></summary>
           <p>Our pieces are offered in premium gold finishes and select solid 14K or 18K gold, with stone specifications clearly noted for each design.</p>
         </details>
         <details>
-          <summary>How long does a custom order take?<span>+</span></summary>
-          <p>Most custom pieces take 4â€“8 weeks after design approval. Complex stonework or sourcing may require additional time.</p>
+          <summary>How long does a custom order take?<span>Open</span></summary>
+          <p>Most custom pieces take 4-8 weeks after design approval. Complex stonework or sourcing may require additional time.</p>
         </details>
         <details>
-          <summary>Is shipping insured?<span>+</span></summary>
+          <summary>Is shipping insured?<span>Open</span></summary>
           <p>Yes. Every RovJewelery order ships fully insured with signature confirmation and tracking.</p>
         </details>
         <details>
-          <summary>How should I care for my jewelry?<span>+</span></summary>
+          <summary>How should I care for my jewelry?<span>Open</span></summary>
           <p>Store pieces separately, avoid harsh chemicals, and clean gently with a soft cloth. Contact us for professional servicing.</p>
         </details>
       </div>
@@ -233,7 +233,7 @@
         <label>Name<input type="text" placeholder="Your name" required></label>
         <label>Email<input type="email" placeholder="you@email.com" required></label>
         <label>How can we help?<textarea placeholder="Tell us what's going on..." required></textarea></label>
-        <button class="button button-outline" type="submit">Send message <span>â†—</span></button>
+        <button class="button button-outline" type="submit">Send message</button>
         <div class="form-success" role="status">Message received. Our client care team will follow up soon.</div>
       </form>
     </section>
@@ -249,20 +249,20 @@
       <div class="footer-column"><h3>Support</h3><a href="mailto:info@rovjewelry.com">Email us</a><a href="#support">FAQ</a><a href="#support">Shipping & returns</a><a href="#support">Jewelry care</a></div>
       <div class="footer-column social-links">
         <h3>Follow</h3>
-        <a href="https://www.instagram.com/rov_jewelry" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on Instagram (opens in a new tab)">Instagram â†—</a>
-        <a href="https://www.tiktok.com/@rovjewelery" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on TikTok (opens in a new tab)">TikTok â†—</a>
-        <a href="https://pin.it/3zvj9Hrh9" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on Pinterest (opens in a new tab)">Pinterest â†—</a>
-        <a href="mailto:info@rovjewelry.com">Email â†—</a>
+        <a href="https://www.instagram.com/rov_jewelry" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on Instagram (opens in a new tab)">Instagram</a>
+        <a href="https://www.tiktok.com/@rovjewelery" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on TikTok (opens in a new tab)">TikTok</a>
+        <a href="https://pin.it/3zvj9Hrh9" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on Pinterest (opens in a new tab)">Pinterest</a>
+        <a href="mailto:info@rovjewelry.com">Email</a>
       </div>
       <div class="newsletter">
         <p class="eyebrow">Private access</p>
         <h3>New drops. No noise.</h3>
-        <form id="newsletter-form"><input type="email" aria-label="Email for newsletter" placeholder="Email address" required><button aria-label="Subscribe" type="submit">â†’</button></form>
+        <form id="newsletter-form"><input type="email" aria-label="Email for newsletter" placeholder="Email address" required><button aria-label="Subscribe" type="submit">Submit</button></form>
         <small>Join for first access to new pieces and private releases.</small>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>Â© 2026 RovJewelery</span>
+      <span>2026 RovJewelery</span>
       <div><a href="#">Privacy policy</a><a href="#">Terms</a></div>
       <span>Designed to endure.</span>
     </div>
@@ -282,12 +282,12 @@
       </label>
       <label>Quantity
         <div class="modal-quantity">
-          <button type="button" data-modal-quantity="-1" aria-label="Decrease quantity">âˆ’</button>
+          <button type="button" data-modal-quantity="-1" aria-label="Decrease quantity">Less</button>
           <input id="product-modal-quantity" type="number" min="1" value="1" aria-label="Product quantity">
-          <button type="button" data-modal-quantity="1" aria-label="Increase quantity">+</button>
+          <button type="button" data-modal-quantity="1" aria-label="Increase quantity">More</button>
         </div>
       </label>
-      <button class="button button-gold" id="product-modal-add" type="button">Add to cart <span>â†—</span></button>
+      <button class="button button-gold" id="product-modal-add" type="button">Add to cart</button>
     </div>
   </section>
 
@@ -309,7 +309,7 @@
     <div class="cart-footer" id="cart-footer" hidden>
       <div class="cart-subtotal"><span>Subtotal</span><strong id="cart-subtotal">$0.00</strong></div>
       <p>Shipping and taxes calculated at checkout.</p>
-      <button class="button button-gold" id="checkout-button" type="button">Checkout securely <span>â†—</span></button>
+      <button class="button button-gold" id="checkout-button" type="button">Checkout securely</button>
     </div>
   </aside>
   <div class="toast" role="status">Added to your bag</div>
