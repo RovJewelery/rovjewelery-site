@@ -161,6 +161,7 @@ h1 em, h2 em, .custom-card em { font-weight: 400; color: var(--gold); }
 .craft-video-small { aspect-ratio: 1 / 1.2; }
 .craft-video-a { grid-column: 2 / 5; grid-row: 6 / 9; }
 .craft-video-b { grid-column: 7 / 10; grid-row: 6 / 9; transform: translateY(32px); }
+.craft-video-c { grid-column: 10 / 12; grid-row: 1 / 3; aspect-ratio: 1 / 1.15; transform: translateY(12px); }
 .craft-video-wide { grid-column: 5 / 9; grid-row: 1 / 3; aspect-ratio: 16 / 9; transform: translateY(-18px); }
 .craft-proof { grid-column: 10 / 13; grid-row: 8 / 9; position: relative; z-index: 2; border-top: 1px solid var(--line); padding-top: 18px; }
 .craft-proof span { color: var(--gold); font-family: var(--serif); font-size: 23px; }
@@ -354,6 +355,7 @@ footer { background: #030303; border-top: 1px solid var(--line); }
   .craft-video-tall { aspect-ratio: 4 / 5; width: 74%; margin-left: auto; }
   .craft-video-a { aspect-ratio: 1 / 1; width: 58%; margin-top: -28px; }
   .craft-video-b { aspect-ratio: 1 / 1.12; width: 64%; margin-left: auto; margin-top: -42px; }
+  .craft-video-c { aspect-ratio: 1 / 1.12; width: 58%; margin-top: 18px; }
   .craft-video-wide { aspect-ratio: 16 / 10; width: 100%; margin-top: 22px; }
   .craft-proof { border-top: 1px solid var(--line); padding-top: 18px; margin-top: 26px; }
   .bracelet-shape { width: 130px; height: 130px; border-width: 18px; }
