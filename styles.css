@@ -38,6 +38,7 @@ img { max-width: 100%; display: block; }
 .desktop-nav-social a::after { display: none; }
 .desktop-nav-social a:hover { color: #080705; background: var(--gold); border-color: var(--gold); box-shadow: 0 0 18px rgba(212,168,47,.24); }
 .desktop-nav-social svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.mobile-nav-social { display: none; }
 .header-actions { display: flex; gap: 20px; align-items: center; }
 .header-actions svg { width: 19px; fill: none; stroke: currentColor; stroke-width: 1.4; }
 .header-actions button { border: 0; background: none; padding: 0; cursor: pointer; position: relative; }
@@ -281,6 +282,11 @@ footer { background: #030303; border-top: 1px solid var(--line); }
   .main-nav.open { transform: none; opacity: 1; }
   .main-nav.open { visibility: visible; }
   .main-nav a { font-size: 13px; padding: 4px 0; }
+  .mobile-nav-social { width: 100%; display: flex; justify-content: center; gap: 14px; padding-top: 10px; margin-top: 2px; }
+  .mobile-nav-social a { width: 44px; height: 44px; display: grid; place-items: center; color: var(--gold-light); border: 1px solid rgba(212,168,47,.32); transition: .3s ease; padding: 0; }
+  .mobile-nav-social a::after { display: none; }
+  .mobile-nav-social a:active { color: #080705; background: var(--gold); border-color: var(--gold); box-shadow: 0 0 18px rgba(212,168,47,.24); }
+  .mobile-nav-social svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
   .header-actions { margin-left: auto; margin-right: 8px; gap: 18px; }
   .header-actions > a { display: block; }
   .header-actions a, .header-actions button { min-width: 42px; min-height: 42px; display: grid; place-items: center; }
