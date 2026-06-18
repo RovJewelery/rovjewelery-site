@@ -317,7 +317,7 @@ function hasStructuredVariantOptions(product) {
   const variants = product.variants?.nodes || [];
   if (variants.length <= 1 || variants[0]?.title === "Default Title") return false;
   if (!["chains", "necklaces", "bracelets"].some((category) => productMatchesCategory(product, category))) return false;
-  return variants.some(variantMaterial) && variants.some(variantMmSize) && variants.some(variantLength);
+  return variants.some(variantMmSize) && variants.some(variantLength);
 }
 
 function uniqueValues(values) {
@@ -327,33 +327,29 @@ function uniqueValues(values) {
 function renderChoiceButtons(product, selectedVariant) {
   if (!hasStructuredVariantOptions(product)) return "";
   const variants = product.variants.nodes;
-  const selectedMaterial = variantMaterial(selectedVariant) || variantMaterial(variants[0]);
-  const selectedLength = variantLength(selectedVariant) || variantLength(variants[0]);
   const selectedMm = variantMmSize(selectedVariant) || variantMmSize(variants[0]);
-  const materials = uniqueValues(variants.map(variantMaterial));
-  const lengths = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial).map(variantLength));
-  const sizes = uniqueValues(variants.filter((variant) => variantMaterial(variant) === selectedMaterial && variantLength(variant) === selectedLength).map(variantMmSize));
-
-  const button = (step, value, selected, enabled) => `
-    <button class="variant-choice ${selected ? "selected" : ""}" type="button" data-variant-step="${step}" data-variant-value="${escapeHtml(value)}" ${enabled ? "" : "disabled"}>
-      ${escapeHtml(value)}
+  const selectedLength = variantLength(selectedVariant) || variantLength(variants[0]);
+  const sizes = uniqueValues(variants.map(variantMmSize));
+  const lengths = uniqueValues(variants.map(variantLength));
+  const button = (variant, length) => `
+    <button class="variant-choice ${variant?.id === selectedVariant?.id ? "selected" : ""}" type="button" data-variant-id="${escapeHtml(variant?.id || "")}" ${variant?.availableForSale ? "" : "disabled"}>
+      ${escapeHtml(length)}
     </button>
   `;
 
   return `
     <div class="variant-builder" aria-label="Choose product options">
-      <div class="variant-step" data-step="material">
-        <span>Material</span>
-        <div>${materials.map((value) => button("material", value, value === selectedMaterial, true)).join("")}</div>
-      </div>
-      <div class="variant-step" data-step="length">
-        <span>Length</span>
-        <div>${lengths.map((value) => button("length", value, value === selectedLength, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantLength(variant) === value))).join("")}</div>
-      </div>
-      <div class="variant-step" data-step="mm">
-        <span>Stone Size</span>
-        <div>${sizes.map((value) => button("mm", value, value === selectedMm, variants.some((variant) => variantMaterial(variant) === selectedMaterial && variantLength(variant) === selectedLength && variantMmSize(variant) === value))).join("")}</div>
-      </div>
+      ${sizes.map((size) => `
+        <div class="variant-row ${size === selectedMm ? "active" : ""}">
+          <span>${escapeHtml(size)}</span>
+          <div>
+            ${lengths.map((length) => {
+              const variant = variants.find((item) => variantMmSize(item) === size && variantLength(item) === length);
+              return button(variant, length);
+            }).join("")}
+          </div>
+        </div>
+      `).join("")}
       <p class="variant-meta" id="variant-meta"></p>
     </div>
   `;
@@ -734,25 +730,7 @@ document.querySelector("#product-modal-image").addEventListener("touchend", (eve
 productModal.addEventListener("click", (event) => {
   const choice = event.target.closest(".variant-choice");
   if (!choice || !state.selectedProduct) return;
-  const currentVariant = state.selectedProduct.variants.nodes.find((item) => item.id === modalVariant.value) || state.selectedProduct.variants.nodes[0];
-  const selection = {
-    material: variantMaterial(currentVariant),
-    mm: variantMmSize(currentVariant),
-    length: variantLength(currentVariant)
-  };
-  selection[choice.dataset.variantStep] = choice.dataset.variantValue;
-
-  if (choice.dataset.variantStep === "material") {
-    const next = findVariantByStructuredSelection(state.selectedProduct, { material: selection.material }) || currentVariant;
-    selection.length = variantLength(next);
-    selection.mm = variantMmSize(next);
-  }
-  if (choice.dataset.variantStep === "length") {
-    const next = findVariantByStructuredSelection(state.selectedProduct, { material: selection.material, length: selection.length }) || currentVariant;
-    selection.mm = variantMmSize(next);
-  }
-
-  const variant = findVariantByStructuredSelection(state.selectedProduct, selection);
+  const variant = state.selectedProduct.variants.nodes.find((item) => item.id === choice.dataset.variantId);
   if (!variant) return;
   modalVariant.value = variant.id;
   renderModalVariantBuilder();
