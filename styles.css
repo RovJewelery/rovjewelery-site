@@ -33,10 +33,11 @@ img { max-width: 100%; display: block; }
 .main-nav a { font-size: 12px; text-transform: uppercase; letter-spacing: .16em; position: relative; }
 .main-nav a::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -9px; height: 1px; background: var(--gold); transition: .35s ease; }
 .main-nav a:hover::after, .main-nav a.active::after { right: 0; }
-.desktop-nav-social { display: flex; align-items: center; gap: 18px; padding-left: 26px; margin-left: 4px; border-left: 1px solid rgba(212,168,47,.25); }
-.desktop-nav-social span { color: var(--gold); font-size: 8px; text-transform: uppercase; letter-spacing: .22em; white-space: nowrap; }
-.desktop-nav-social a { font-size: 9px; letter-spacing: .16em; color: #aaa398; }
-.desktop-nav-social a:hover { color: var(--cream); }
+.desktop-nav-social { display: flex; align-items: center; gap: 12px; padding-left: 22px; margin-left: 2px; border-left: 1px solid rgba(212,168,47,.25); }
+.desktop-nav-social a { width: 28px; height: 28px; display: grid; place-items: center; color: var(--gold-light); border: 1px solid rgba(212,168,47,.28); transition: .3s ease; }
+.desktop-nav-social a::after { display: none; }
+.desktop-nav-social a:hover { color: #080705; background: var(--gold); border-color: var(--gold); box-shadow: 0 0 18px rgba(212,168,47,.24); }
+.desktop-nav-social svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .header-actions { display: flex; gap: 20px; align-items: center; }
 .header-actions svg { width: 19px; fill: none; stroke: currentColor; stroke-width: 1.4; }
 .header-actions button { border: 0; background: none; padding: 0; cursor: pointer; position: relative; }
@@ -260,7 +261,6 @@ footer { background: #030303; border-top: 1px solid var(--line); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 1050px) {
-  .main-nav { gap: 24px; }
   .desktop-nav-social { display: none; }
   .product-image { height: 410px; }
   .custom-section { grid-template-columns: 1fr 1.2fr; gap: 5vw; }
