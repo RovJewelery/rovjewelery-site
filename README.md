@@ -1,80 +1,300 @@
-# RovJewelery Shopify Connection
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="RovJewelery creates statement gold jewelry and one-of-one custom pieces.">
+  <title>RovJewelery | Made to Be Remembered</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Italiana&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="shopify-config.js"></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="announcement">
+    <p>Complimentary insured shipping on orders over $500</p>
+  </div>
 
-This website is connected to Shopify through the **Storefront API**. Shopify remains responsible for products, collections, variants, inventory, the cart, checkout, payments, and order processing.
+  <header class="site-header">
+    <button class="menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+      <span></span><span></span>
+    </button>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a class="active" href="#home">Home</a>
+      <a href="#shop">Shop</a>
+      <a href="#shop" data-collection-link="watches">Watches</a>
+      <a href="mailto:info@rovjewelry.com">Support</a>
+      <a href="#custom">Custom</a>
+      <div class="desktop-nav-social" aria-label="Social links">
+        <a href="https://www.facebook.com/share/1Bwom4q7Nv/?mibextid=wwXlfr" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3 0-5 2-5 5v3H6v4h3v4h4v-4h3l1-4h-4V9c0-.6.4-1 1-1Z"></path></svg>
+        </a>
+        <a href="https://www.instagram.com/rov_jewelry" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><circle cx="12" cy="12" r="3.5"></circle><circle cx="17" cy="7" r="1"></circle></svg>
+        </a>
+        <a href="https://pin.it/3zvj9Hrh9" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c1.2-2.8 1.8-5.1 2.1-7"></path><path d="M10.7 13.8c-.6-.6-.9-1.4-.9-2.3 0-2 1.4-3.5 3.4-3.5 1.7 0 2.9 1.1 2.9 2.8 0 2.3-1.2 4.3-3 4.3-.8 0-1.4-.4-1.6-1"></path><path d="M12 3a9 9 0 1 0 6.4 15.4"></path></svg>
+        </a>
+        <a href="https://www.tiktok.com/@rovjewelery" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4v10.2a4 4 0 1 1-3.4-4"></path><path d="M14 4c.5 3 2.2 4.8 5 5"></path></svg>
+        </a>
+      </div>
+      <div class="mobile-nav-social" aria-label="Social links">
+        <a href="https://www.facebook.com/share/1Bwom4q7Nv/?mibextid=wwXlfr" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 8h3V4h-3c-3 0-5 2-5 5v3H6v4h3v4h4v-4h3l1-4h-4V9c0-.6.4-1 1-1Z"></path></svg>
+        </a>
+        <a href="https://www.instagram.com/rov_jewelry" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="5"></rect><circle cx="12" cy="12" r="3.5"></circle><circle cx="17" cy="7" r="1"></circle></svg>
+        </a>
+        <a href="https://pin.it/3zvj9Hrh9" target="_blank" rel="noopener noreferrer" aria-label="Pinterest">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c1.2-2.8 1.8-5.1 2.1-7"></path><path d="M10.7 13.8c-.6-.6-.9-1.4-.9-2.3 0-2 1.4-3.5 3.4-3.5 1.7 0 2.9 1.1 2.9 2.8 0 2.3-1.2 4.3-3 4.3-.8 0-1.4-.4-1.6-1"></path><path d="M12 3a9 9 0 1 0 6.4 15.4"></path></svg>
+        </a>
+        <a href="https://www.tiktok.com/@rovjewelery" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4v10.2a4 4 0 1 1-3.4-4"></path><path d="M14 4c.5 3 2.2 4.8 5 5"></path></svg>
+        </a>
+      </div>
+    </nav>
+    <div class="header-actions">
+      <a href="#shop" aria-label="Search products">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+      </a>
+      <button class="bag-button" type="button" aria-label="Shopping bag">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l-1 12H6L5 8Z"></path><path d="M9 9V6a3 3 0 0 1 6 0v3"></path></svg>
+        <span class="bag-count">0</span>
+      </button>
+    </div>
+  </header>
 
-## Information you need from Shopify
+  <main>
+    <section class="hero" id="home">
+      <video class="hero-video" autoplay muted loop playsinline preload="auto">
+        <source src="./hero-video.mp4" type="video/mp4">
+      </video>
+      <div class="hero-shade"></div>
+      <div class="hero-content reveal">
+        <img class="hero-logo" src="./rovjewelery-logo-hero.png" alt="RovJewelery" width="480" height="458" decoding="async">
+        <p class="eyebrow">Crafted without compromise</p>
+        <h1>Make your<br><em>mark.</em></h1>
+        <p class="hero-copy">Statement jewelry and one-of-one pieces, designed to outlive the moment.</p>
+        <div class="hero-actions">
+          <a class="button button-gold" href="#shop">Shop now <span>↗</span></a>
+          <a class="button button-ghost" href="#custom">Start custom order</a>
+        </div>
+      </div>
+      <div class="hero-stamp" aria-hidden="true">
+        <span>ROV</span>
+        <small>EST. 2024</small>
+      </div>
+      <a class="scroll-cue" href="#shop"><span></span>Discover the collection</a>
+    </section>
 
-You need exactly two values:
+    <section class="trust-bar" aria-label="Service benefits">
+      <p><span>01</span> Authentic materials</p>
+      <p><span>02</span> Lifetime craftsmanship care</p>
+      <p><span>03</span> Insured delivery</p>
+      <p><span>04</span> Made for you</p>
+    </section>
 
-1. Your permanent Shopify store domain, such as `rovjewelery.myshopify.com`
-2. A **public Storefront API access token**
+    <section class="collection section" id="shop">
+      <div class="section-heading reveal">
+        <div>
+          <p class="eyebrow">The collection</p>
+          <h2>Built to turn<br><em>heads.</em></h2>
+        </div>
+        <p>Bold silhouettes. Meticulous stonework. Each RovJewelery piece is selected for presence and finished to endure.</p>
+      </div>
 
-Do not use an Admin API token or a private Storefront API token in browser code.
+      <div class="filter-scroll reveal">
+        <div class="filter-row" role="tablist" aria-label="Product categories">
+          <button class="filter active" type="button" data-filter="all">All <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="chains">Chains <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="necklaces">Necklaces <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="bracelets">Bracelets <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="watches">Watches <sup>0</sup></button>
+          <button class="filter" type="button" data-filter="custom">Custom Order <sup>01</sup></button>
+        </div>
+        <span class="filter-scroll-hint" aria-hidden="true">swipe</span>
+      </div>
 
-## Get a Storefront API token
+      <div class="product-grid" id="product-grid" aria-live="polite">
+        <div class="catalog-loading">
+          <span></span>
+          <p>Loading the collection</p>
+        </div>
+      </div>
+      <div class="pagination" id="pagination" aria-label="Product pagination"></div>
+    </section>
 
-1. Sign in to your Shopify admin.
-2. Install or open the **Headless** sales channel.
-3. Select **Create storefront** or **Add storefront**.
-4. Open **Storefront API permissions** and enable access to products, product listings, collections, and cart/checkout functionality.
-5. Copy the **public Storefront API access token**.
+    <section class="manifesto">
+      <div class="manifesto-mark">R</div>
+      <div class="manifesto-copy reveal">
+        <p class="eyebrow">The Rov standard</p>
+        <blockquote>“Jewelry shouldn't simply be worn. It should say something before you do.”</blockquote>
+        <p>Every detail is considered, from weight and proportion to the final polish. The result is jewelry with character, made to become part of yours.</p>
+      </div>
+      <div class="manifesto-detail">
+        <span>14K / 18K</span>
+        <small>Solid gold options</small>
+      </div>
+    </section>
 
-Shopify's current setup guide is available at:
-https://shopify.dev/docs/storefronts/headless/building-with-the-storefront-api/getting-started
+    <section class="custom-section section" id="custom">
+      <div class="custom-intro reveal">
+        <p class="eyebrow">The custom studio</p>
+        <h2>Nothing ordinary.<br><em>Nothing repeated.</em></h2>
+        <p>Share your idea and our design team will shape it into a piece that is unmistakably yours.</p>
+        <ol>
+          <li><span>01</span><div><h3>Tell us your vision</h3><p>Send your idea, references, and ideal budget.</p></div></li>
+          <li><span>02</span><div><h3>Approve the design</h3><p>We refine the concept, materials, and details together.</p></div></li>
+          <li><span>03</span><div><h3>Made for you</h3><p>Your piece is crafted, inspected, and delivered insured.</p></div></li>
+        </ol>
+      </div>
 
-## Add your Shopify credentials
+      <form class="luxury-form reveal" id="custom-form">
+        <div class="form-heading">
+          <span>Project inquiry</span>
+          <small>Typically replies within 1–2 business days</small>
+        </div>
+        <div class="field-grid">
+          <label>Full name<input type="text" name="name" placeholder="Your name" required></label>
+          <label>Email address<input type="email" name="email" placeholder="you@email.com" required></label>
+          <label>Phone number<input type="tel" name="phone" placeholder="(000) 000-0000" required></label>
+          <label>Jewelry type
+            <select name="type" required>
+              <option value="">Select a type</option>
+              <option>Chain</option><option>Necklace</option><option>Bracelet</option><option>Other</option>
+            </select>
+          </label>
+          <label>Ideal budget
+            <select name="budget" required>
+              <option value="">Select a range</option>
+              <option>$500 – $1,500</option><option>$1,500 – $5,000</option><option>$5,000 – $10,000</option><option>$10,000+</option>
+            </select>
+          </label>
+          <label class="upload-field">Inspiration image
+            <input id="inspiration-file" type="file" name="image" accept="image/*">
+            <span class="upload-ui"><b>+</b><span class="file-name">Upload an image</span></span>
+          </label>
+        </div>
+        <label>Tell us about your piece<textarea name="description" placeholder="Describe the piece, material, stones, size, or anything else you have in mind..." required></textarea></label>
+        <button class="button button-gold submit-button" type="submit">Submit project <span>↗</span></button>
+        <p class="form-note">By submitting, you agree to be contacted about your inquiry.</p>
+        <div class="form-success" role="status">Your vision is in good hands. We'll be in touch shortly.</div>
+      </form>
+    </section>
 
-Open `shopify-config.js` and replace both placeholder values:
+    <section class="support-section section" id="support">
+      <div class="support-heading reveal">
+        <p class="eyebrow">Client care</p>
+        <h2>We're here<br><em>for you.</em></h2>
+        <p>Questions about a piece, an order, or caring for your jewelry? Start here or send us a note.</p>
+        <a class="contact-link" href="mailto:info@rovjewelry.com">info@rovjewelry.com</a>
+      </div>
+      <div class="faq reveal">
+        <h3>Frequently asked</h3>
+        <details>
+          <summary>What materials do you use?<span>+</span></summary>
+          <p>Our pieces are offered in premium gold finishes and select solid 14K or 18K gold, with stone specifications clearly noted for each design.</p>
+        </details>
+        <details>
+          <summary>How long does a custom order take?<span>+</span></summary>
+          <p>Most custom pieces take 4–8 weeks after design approval. Complex stonework or sourcing may require additional time.</p>
+        </details>
+        <details>
+          <summary>Is shipping insured?<span>+</span></summary>
+          <p>Yes. Every RovJewelery order ships fully insured with signature confirmation and tracking.</p>
+        </details>
+        <details>
+          <summary>How should I care for my jewelry?<span>+</span></summary>
+          <p>Store pieces separately, avoid harsh chemicals, and clean gently with a soft cloth. Contact us for professional servicing.</p>
+        </details>
+      </div>
+      <form class="support-form reveal" id="support-form">
+        <h3>Still need help?</h3>
+        <label>Name<input type="text" placeholder="Your name" required></label>
+        <label>Email<input type="email" placeholder="you@email.com" required></label>
+        <label>How can we help?<textarea placeholder="Tell us what's going on..." required></textarea></label>
+        <button class="button button-outline" type="submit">Send message <span>↗</span></button>
+        <div class="form-success" role="status">Message received. Our client care team will follow up soon.</div>
+      </form>
+    </section>
+  </main>
 
-```js
-window.SHOPIFY_CONFIG = {
-  SHOPIFY_STORE_URL: "rovjewelery.myshopify.com",
-  SHOPIFY_STOREFRONT_ACCESS_TOKEN: "your-public-storefront-token"
-};
-```
+  <footer>
+    <div class="footer-main">
+      <div class="footer-brand">
+        <img src="./rovjewelery-logo-optimized.png" alt="">
+        <p>Fine jewelry with presence.<br>Created for your story.</p>
+      </div>
+      <div class="footer-column"><h3>Shop</h3><a href="#shop" data-collection-link="all">All</a><a href="#shop" data-collection-link="chains">Chains</a><a href="#shop" data-collection-link="necklaces">Necklaces</a><a href="#shop" data-collection-link="bracelets">Bracelets</a><a href="#shop" data-collection-link="watches">Watches</a><a href="#custom">Custom Order</a></div>
+      <div class="footer-column"><h3>Support</h3><a href="mailto:info@rovjewelry.com">Email us</a><a href="#support">FAQ</a><a href="#support">Shipping & returns</a><a href="#support">Jewelry care</a></div>
+      <div class="footer-column social-links">
+        <h3>Follow</h3>
+        <a href="https://www.instagram.com/rov_jewelry" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on Instagram (opens in a new tab)">Instagram ↗</a>
+        <a href="https://www.tiktok.com/@rovjewelery" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on TikTok (opens in a new tab)">TikTok ↗</a>
+        <a href="https://pin.it/3zvj9Hrh9" target="_blank" rel="noopener noreferrer" aria-label="RovJewelery on Pinterest (opens in a new tab)">Pinterest ↗</a>
+        <a href="mailto:info@rovjewelry.com">Email ↗</a>
+      </div>
+      <div class="newsletter">
+        <p class="eyebrow">Private access</p>
+        <h3>New drops. No noise.</h3>
+        <form id="newsletter-form"><input type="email" aria-label="Email for newsletter" placeholder="Email address" required><button aria-label="Subscribe" type="submit">→</button></form>
+        <small>Join for first access to new pieces and private releases.</small>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 RovJewelery</span>
+      <div><a href="#">Privacy policy</a><a href="#">Terms</a></div>
+      <span>Designed to endure.</span>
+    </div>
+  </footer>
 
-Use the `.myshopify.com` domain shown in **Shopify admin → Settings → Domains**, even if customers normally visit a custom domain.
+  <div class="product-modal-overlay" data-product-close></div>
+  <section class="product-modal" aria-labelledby="product-modal-title" aria-hidden="true" role="dialog" aria-modal="true">
+    <button class="product-modal-close" type="button" aria-label="Close product details" data-product-close>×</button>
+    <div class="product-modal-image" id="product-modal-image"></div>
+    <div class="product-modal-content">
+      <p class="eyebrow" id="product-modal-category">The collection</p>
+      <h2 id="product-modal-title">Product</h2>
+      <p class="product-modal-price" id="product-modal-price"></p>
+      <div class="product-modal-description" id="product-modal-description"></div>
+      <label>Variant
+        <select id="product-modal-variant"></select>
+      </label>
+      <label>Quantity
+        <div class="modal-quantity">
+          <button type="button" data-modal-quantity="-1" aria-label="Decrease quantity">−</button>
+          <input id="product-modal-quantity" type="number" min="1" value="1" aria-label="Product quantity">
+          <button type="button" data-modal-quantity="1" aria-label="Increase quantity">+</button>
+        </div>
+      </label>
+      <button class="button button-gold" id="product-modal-add" type="button">Add to cart <span>↗</span></button>
+    </div>
+  </section>
 
-## Required Shopify collections
-
-Create or verify these collections and handles:
-
-| Collection title | Required handle |
-| --- | --- |
-| Chains | `chains` |
-| Necklaces | `necklaces` |
-| Bracelets | `bracelets` |
-
-The **All** tab automatically loads all products published to the Headless sales channel. Products must be available to the Headless channel or the Storefront API will not return them.
-
-## Test the connection
-
-Do not test only by double-clicking `index.html`. Run the site through a local web server:
-
-```bash
-python3 -m http.server 4173
-```
-
-Then open:
-
-```text
-http://localhost:4173
-```
-
-Confirm the following:
-
-1. Products and collection counts load from Shopify.
-2. Each card displays its Shopify image, title, price, and variants.
-3. The collection tabs show the correct products.
-4. **Add to cart** opens the cart drawer and updates the bag count.
-5. Quantity and remove controls update the Shopify cart.
-6. **Checkout securely** redirects to Shopify Checkout.
-
-If products do not appear, confirm they are active, available to the Headless sales channel, and assigned to collections with the exact handles above.
-
-## Implementation notes
-
-- Storefront API version: `2026-04`
-- Cart IDs are saved in browser `localStorage`, so the cart survives page reloads.
-- Checkout uses the `checkoutUrl` returned by Shopify's Cart API.
-- The public Storefront token is expected to be visible in browser code. Its permissions should remain limited to storefront operations.
+  <div class="cart-overlay" data-cart-close></div>
+  <aside class="cart-drawer" aria-labelledby="cart-title" aria-hidden="true">
+    <div class="cart-header">
+      <div>
+        <p class="eyebrow">Your selection</p>
+        <h2 id="cart-title">Shopping bag</h2>
+      </div>
+      <button class="cart-close" type="button" aria-label="Close shopping bag" data-cart-close>×</button>
+    </div>
+    <div class="cart-lines" id="cart-lines">
+      <div class="cart-empty">
+        <p>Your bag is currently empty.</p>
+        <button class="button button-outline" type="button" data-cart-close>Continue shopping</button>
+      </div>
+    </div>
+    <div class="cart-footer" id="cart-footer" hidden>
+      <div class="cart-subtotal"><span>Subtotal</span><strong id="cart-subtotal">$0.00</strong></div>
+      <p>Shipping and taxes calculated at checkout.</p>
+      <button class="button button-gold" id="checkout-button" type="button">Checkout securely <span>↗</span></button>
+    </div>
+  </aside>
+  <div class="toast" role="status">Added to your bag</div>
+</body>
+</html>
