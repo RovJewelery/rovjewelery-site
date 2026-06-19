@@ -74,31 +74,13 @@ const PRODUCT_FIELDS = `
   descriptionHtml
   availableForSale
   featuredImage { url altText width height }
-  images(first: 20) { nodes { url altText width height } }
-  media(first: 50) {
-    nodes {
-      mediaContentType
-      alt
-      previewImage { url altText width height }
-      ... on MediaImage {
-        image { url altText width height }
-      }
-      ... on Video {
-        sources { url mimeType format height width }
-      }
-      ... on ExternalVideo {
-        embeddedUrl
-        host
-      }
-    }
-  }
+  images(first: 10) { nodes { url altText width height } }
   priceRange { minVariantPrice { amount currencyCode } }
   variants(first: 100) {
     nodes {
       id
       title
       availableForSale
-      sku
       price { amount currencyCode }
       image { url altText }
       selectedOptions { name value }
@@ -177,105 +159,6 @@ function productCategoryLabel(product) {
 function variantLabel(variant) {
   if (!variant || variant.title === "Default Title") return "Standard";
   return variant.selectedOptions?.map((option) => option.value).join(" / ") || variant.title;
-}
-
-function getProductMedia(product) {
-  const seen = new Set();
-  const media = [];
-  (product.media?.nodes || []).forEach((item) => {
-    if (!item) return;
-    const image = item.image || item.previewImage;
-    const videoSource = item.sources?.find((source) => source.mimeType === "video/mp4") || item.sources?.[0];
-    const url = item.mediaContentType === "VIDEO" ? videoSource?.url : image?.url || item.embeddedUrl;
-    if (!url || seen.has(url)) return;
-    seen.add(url);
-    media.push({
-      type: item.mediaContentType === "VIDEO" ? "video" : item.mediaContentType === "EXTERNAL_VIDEO" ? "externalVideo" : "image",
-      url,
-      mimeType: videoSource?.mimeType || "video/mp4",
-      alt: item.alt || image?.altText || product.title,
-      preview: item.previewImage?.url || image?.url || "",
-      width: image?.width,
-      height: image?.height
-    });
-  });
-
-  [product.featuredImage, ...(product.images?.nodes || [])].forEach((image) => {
-    if (!image?.url || seen.has(image.url)) return;
-    seen.add(image.url);
-    media.push({ type: "image", url: image.url, alt: image.altText || product.title, preview: image.url, width: image.width, height: image.height });
-  });
-
-  return media;
-}
-
-function renderMediaItem(item, product, index, isActive = false) {
-  const activeClass = isActive ? " active" : "";
-  const hidden = isActive ? "" : ' aria-hidden="true"';
-  if (item.type === "video") {
-    return `
-      <div class="product-gallery-slide${activeClass}" data-media-index="${index}"${hidden}>
-        <video muted loop playsinline preload="${index === 0 ? "metadata" : "none"}" ${isActive ? "autoplay" : ""} poster="${escapeHtml(item.preview || "")}">
-          <source src="${escapeHtml(item.url)}" type="${escapeHtml(item.mimeType)}">
-        </video>
-      </div>
-    `;
-  }
-  if (item.type === "externalVideo") {
-    return `
-      <div class="product-gallery-slide${activeClass}" data-media-index="${index}"${hidden}>
-        <iframe src="${escapeHtml(item.url)}" title="${escapeHtml(item.alt || product.title)}" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-      </div>
-    `;
-  }
-  return `
-    <div class="product-gallery-slide${activeClass}" data-media-index="${index}"${hidden}>
-      <img src="${escapeHtml(item.url)}" alt="${escapeHtml(item.alt || product.title)}" loading="${index === 0 ? "eager" : "lazy"}" decoding="async">
-    </div>
-  `;
-}
-
-function renderProductGallery(product, activeIndex = 0) {
-  const media = getProductMedia(product);
-  if (!media.length) return "";
-  const safeIndex = Math.min(Math.max(activeIndex, 0), media.length - 1);
-  return `
-    <div class="product-gallery" data-gallery-index="${safeIndex}">
-      <div class="product-gallery-stage">
-        ${media.map((item, index) => renderMediaItem(item, product, index, index === safeIndex)).join("")}
-      </div>
-      ${media.length > 1 ? `
-        <div class="product-gallery-thumbs" aria-label="Product media">
-          ${media.map((item, index) => `
-            <button class="product-gallery-thumb ${index === safeIndex ? "active" : ""}" type="button" data-media-index="${index}" aria-label="View media ${index + 1}">
-              ${item.type === "video" || item.type === "externalVideo" ? '<span class="media-play">Play</span>' : ""}
-              ${item.preview ? `<img src="${escapeHtml(item.preview)}" alt="" loading="lazy" decoding="async">` : `<span>${index + 1}</span>`}
-            </button>
-          `).join("")}
-        </div>
-      ` : ""}
-    </div>
-  `;
-}
-
-function switchProductMedia(index) {
-  const gallery = document.querySelector(".product-gallery");
-  if (!gallery) return;
-  const slides = gallery.querySelectorAll(".product-gallery-slide");
-  const thumbs = gallery.querySelectorAll(".product-gallery-thumb");
-  const nextIndex = Math.min(Math.max(Number(index) || 0, 0), slides.length - 1);
-  slides.forEach((slide, slideIndex) => {
-    const isActive = slideIndex === nextIndex;
-    slide.classList.toggle("active", isActive);
-    slide.setAttribute("aria-hidden", isActive ? "false" : "true");
-    const video = slide.querySelector("video");
-    if (video) {
-      if (isActive) video.play().catch(() => {});
-      else video.pause();
-    }
-  });
-  thumbs.forEach((thumb, thumbIndex) => thumb.classList.toggle("active", thumbIndex === nextIndex));
-  gallery.dataset.galleryIndex = String(nextIndex);
 }
 
 function renderProductCard(product) {
@@ -569,7 +452,10 @@ function openProductModal(productId) {
   document.querySelector("#product-modal-title").textContent = product.title;
   document.querySelector("#product-modal-description").innerHTML =
     product.descriptionHtml || `<p>${escapeHtml(product.description || "Details coming soon.")}</p>`;
-  document.querySelector("#product-modal-image").innerHTML = renderProductGallery(product);
+  const image = product.featuredImage || product.images.nodes[0];
+  document.querySelector("#product-modal-image").innerHTML = image
+    ? `<img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.altText || product.title)}">`
+    : "";
   modalVariant.innerHTML = product.variants.nodes.map((variant) => `
     <option value="${escapeHtml(variant.id)}" ${variant.availableForSale ? "" : "disabled"}>
       ${escapeHtml(variantLabel(variant))}${variant.availableForSale ? ` — ${formatMoney(variant.price)}` : " — Sold out"}
@@ -595,32 +481,12 @@ function updateProductModalVariant() {
   modalAddButton.disabled = !variant?.availableForSale;
   modalAddButton.firstChild.textContent = variant?.availableForSale ? "Add to cart " : "Sold out ";
   if (variant?.image) {
-    const mediaIndex = getProductMedia(state.selectedProduct).findIndex((item) => item.url === variant.image.url);
-    if (mediaIndex >= 0) switchProductMedia(mediaIndex);
+    document.querySelector("#product-modal-image").innerHTML =
+      `<img src="${escapeHtml(variant.image.url)}" alt="${escapeHtml(variant.image.altText || state.selectedProduct.title)}">`;
   }
 }
 
 modalVariant.addEventListener("change", updateProductModalVariant);
-document.querySelector("#product-modal-image").addEventListener("click", (event) => {
-  const thumb = event.target.closest(".product-gallery-thumb");
-  if (!thumb) return;
-  switchProductMedia(thumb.dataset.mediaIndex);
-});
-document.querySelector("#product-modal-image").addEventListener("touchstart", (event) => {
-  const gallery = event.target.closest(".product-gallery");
-  if (!gallery) return;
-  gallery.dataset.touchStartX = String(event.touches[0].clientX);
-}, { passive: true });
-document.querySelector("#product-modal-image").addEventListener("touchend", (event) => {
-  const gallery = event.target.closest(".product-gallery");
-  if (!gallery) return;
-  const startX = Number(gallery.dataset.touchStartX || 0);
-  const deltaX = event.changedTouches[0].clientX - startX;
-  if (Math.abs(deltaX) < 35) return;
-  const current = Number(gallery.dataset.galleryIndex || 0);
-  const total = gallery.querySelectorAll(".product-gallery-slide").length;
-  switchProductMedia(deltaX < 0 ? Math.min(current + 1, total - 1) : Math.max(current - 1, 0));
-}, { passive: true });
 document.querySelectorAll("[data-modal-quantity]").forEach((button) => {
   button.addEventListener("click", () => {
     const next = Math.max(1, Number(modalQuantity.value || 1) + Number(button.dataset.modalQuantity));
